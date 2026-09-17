@@ -1,0 +1,21 @@
+.admin-dashboard__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-block: var(--space-6) var(--space-9);
+}
+
+.admin-dashboard__content {
+  min-width: 0;
+}
+
+@media (min-width: 860px) {
+  .admin-dashboard__grid {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .admin-dashboard__content {
+    flex: 1;
+  }
+}

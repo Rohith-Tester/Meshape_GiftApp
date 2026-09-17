@@ -1,0 +1,61 @@
+.shop-info-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.shop-info-panel h2 {
+  margin-bottom: var(--space-4);
+}
+
+.shop-info-panel__list {
+  margin: 0 0 var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.shop-info-panel__list dt {
+  font-size: var(--fs-100);
+  color: var(--color-gold-600);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-1);
+}
+
+.shop-info-panel__list dd {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.shop-info-panel__list a {
+  color: var(--color-brand);
+  font-weight: var(--fw-medium);
+}
+
+.shop-info-panel__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.shop-info-panel__maps-btn,
+.shop-info-panel__directions-btn {
+  text-align: center;
+  padding: 0.75rem;
+  border-radius: var(--radius-pill);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-200);
+}
+
+.shop-info-panel__maps-btn {
+  background: var(--color-plum-950);
+  color: var(--color-ivory-50);
+}
+
+.shop-info-panel__directions-btn {
+  border: 1px solid var(--color-gold-500);
+  color: var(--color-gold-600);
+}

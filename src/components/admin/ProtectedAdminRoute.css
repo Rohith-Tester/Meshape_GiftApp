@@ -1,0 +1,8 @@
+.protected-admin-route__loading {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: var(--fs-200);
+}

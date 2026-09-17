@@ -1,0 +1,115 @@
+.footer {
+  background: var(--color-plum-950);
+  color: var(--color-text-on-dark);
+  margin-top: var(--space-10);
+}
+
+.footer__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-7);
+  padding-block: var(--space-9) var(--space-7);
+}
+
+.footer__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.footer__brand-logo {
+  display: block;
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+.footer__heading {
+  font-size: var(--fs-200);
+  font-weight: var(--fw-semibold);
+  color: var(--color-gold-200);
+  margin: 0 0 var(--space-1);
+}
+
+.footer__text {
+  color: var(--color-text-on-dark-muted);
+  font-size: var(--fs-200);
+  margin: 0;
+  max-width: 32ch;
+}
+
+.footer__link {
+  color: var(--color-text-on-dark-muted);
+  font-size: var(--fs-200);
+  width: fit-content;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.footer__link:hover {
+  color: var(--color-text-on-dark);
+}
+
+.footer__bottom {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--space-5);
+  border-top: 1px solid var(--color-border-dark);
+}
+
+.footer__copyright {
+  margin: 0;
+  font-size: var(--fs-100);
+  color: var(--color-text-on-dark-muted);
+  text-align: center;
+}
+
+.footer__credit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: default;
+}
+
+.footer__credit-text {
+  font-size: var(--fs-100);
+  color: var(--color-text-on-dark-muted);
+}
+
+.footer__credit-mark {
+  display: inline-flex;
+  align-items: center;
+}
+
+.footer__credit-logo {
+  height: 22px;
+  width: auto;
+}
+
+.footer__credit-fallback {
+  display: none;
+  font-family: var(--font-display);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-200);
+  /* Craft Tech's own brand blue/purple, not MeShape's design system —
+     intentionally hardcoded exactly as the brief specifies rather than
+     tokenized, since these colors belong to a different brand than the
+     one src/styles/tokens.css encodes. Only used as a text-fallback if
+     the real Craft Tech logo image fails to load. */
+  background: linear-gradient(90deg, #6ec3f4, #a685e2 55%, #6ec3f4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (min-width: 640px) {
+  .footer__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .footer__bottom {
+    flex-direction: row;
+  }
+}

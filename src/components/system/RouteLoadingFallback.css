@@ -1,0 +1,24 @@
+.route-loading-fallback {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--fs-200);
+}
+
+.route-loading-fallback__spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-brand);
+  animation: route-loading-spin 0.7s linear infinite;
+}
+
+@keyframes route-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

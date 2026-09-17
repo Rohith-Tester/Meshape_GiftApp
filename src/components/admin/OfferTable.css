@@ -1,0 +1,82 @@
+.offer-table {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.offer-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-200);
+  min-width: 640px;
+}
+
+.offer-table th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--fs-100);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.offer-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.offer-table tr:last-child td {
+  border-bottom: none;
+}
+
+.offer-table__status {
+  font-size: var(--fs-100);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.offer-table__status--active {
+  background: rgba(63, 125, 92, 0.12);
+  color: var(--color-success);
+}
+
+.offer-table__status--scheduled {
+  background: rgba(185, 139, 78, 0.15);
+  color: var(--color-gold-600);
+}
+
+.offer-table__status--expired {
+  background: var(--color-danger-tint-bg);
+  color: var(--color-danger);
+}
+
+.offer-table__actions {
+  display: flex;
+  gap: var(--space-3);
+  white-space: nowrap;
+}
+
+.offer-table__actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: var(--fw-medium);
+  color: var(--color-brand);
+  padding: 0;
+}
+
+.offer-table__delete {
+  color: var(--color-danger) !important;
+}
+
+.offer-table__empty {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-text-muted);
+}

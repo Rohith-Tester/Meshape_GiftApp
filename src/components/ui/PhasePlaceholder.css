@@ -1,0 +1,28 @@
+.phase-placeholder {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(180deg, var(--color-blush-50), var(--color-bg) 60%);
+}
+
+.phase-placeholder__inner {
+  padding-block: var(--space-9);
+  max-width: 640px;
+}
+
+.phase-placeholder__desc {
+  color: var(--color-text-muted);
+  font-size: var(--fs-400);
+}
+
+.phase-placeholder__note {
+  display: inline-block;
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-gold-600);
+  font-size: var(--fs-200);
+  font-weight: var(--fw-medium);
+}

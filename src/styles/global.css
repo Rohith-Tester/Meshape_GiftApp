@@ -1,0 +1,123 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-300);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+picture,
+video {
+  max-width: 100%;
+  display: block;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  line-height: var(--lh-tight);
+  margin: 0 0 var(--space-4);
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: clamp(2.25rem, 4vw + 1rem, var(--fs-800));
+}
+
+h2 {
+  font-size: clamp(1.75rem, 2.4vw + 1rem, var(--fs-700));
+}
+
+h3 {
+  font-size: var(--fs-600);
+}
+
+p {
+  margin: 0 0 var(--space-4);
+  max-width: var(--prose-max);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+ul,
+ol {
+  padding-left: 1.2em;
+}
+
+/* Visible keyboard focus everywhere — never suppressed */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.container {
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding-inline: var(--space-5);
+}
+
+.section {
+  padding-block: var(--space-7) var(--space-9);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-inline: var(--space-7);
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: -48px;
+  background: var(--color-plum-800);
+  color: var(--color-text-on-dark);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-sm);
+  z-index: var(--z-modal);
+  transition: top var(--duration-base) var(--ease-standard);
+}
+
+.skip-link:focus {
+  top: var(--space-4);
+}

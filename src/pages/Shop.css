@@ -1,0 +1,22 @@
+.shop-page__intro {
+  max-width: 720px;
+  margin-bottom: var(--space-7);
+}
+
+.shop-page__intro p {
+  color: var(--color-text-muted);
+  font-size: var(--fs-400);
+}
+
+.shop-page__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-7);
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .shop-page__grid {
+    grid-template-columns: 2fr 1fr;
+  }
+}

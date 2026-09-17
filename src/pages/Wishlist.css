@@ -1,0 +1,113 @@
+.wishlist-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.wishlist-item {
+  display: grid;
+  grid-template-columns: 88px 1fr auto;
+  gap: var(--space-4);
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.wishlist-item__media {
+  width: 88px;
+  height: 88px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  display: block;
+}
+
+.wishlist-item__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wishlist-item__name {
+  font-family: var(--font-display);
+  font-size: var(--fs-500);
+  color: var(--color-text);
+}
+
+.wishlist-item__category {
+  color: var(--color-text-muted);
+  font-size: var(--fs-100);
+  margin: var(--space-1) 0;
+}
+
+.wishlist-item__price-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.wishlist-item__price {
+  font-weight: var(--fw-bold);
+  color: var(--color-brand);
+}
+
+.wishlist-item__price-original {
+  font-size: var(--fs-100);
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.wishlist-item__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-end;
+}
+
+.wishlist-item__move {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--color-brand);
+  color: var(--color-ivory-50);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-100);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wishlist-item__move:hover {
+  background: var(--color-brand-hover);
+}
+
+.wishlist-item__remove {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--fs-100);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .wishlist-item {
+    grid-template-columns: 64px 1fr;
+  }
+
+  .wishlist-item__media {
+    width: 64px;
+    height: 64px;
+  }
+
+  .wishlist-item__name {
+    font-size: var(--fs-300);
+  }
+
+  .wishlist-item__actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+  }
+}

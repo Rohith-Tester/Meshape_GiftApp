@@ -1,0 +1,32 @@
+.products-manager__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+
+.products-manager__status {
+  padding: var(--space-4);
+  color: var(--color-text-muted);
+}
+
+.products-manager__status--error {
+  color: var(--color-danger);
+  background: var(--color-danger-tint-bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-4);
+}
+
+.products-manager__add-btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--color-brand);
+  color: var(--color-ivory-50);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.products-manager__add-btn:hover {
+  background: var(--color-brand-hover);
+}

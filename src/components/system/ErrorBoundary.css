@@ -1,0 +1,56 @@
+.error-boundary {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  padding: var(--space-5);
+}
+
+.error-boundary__card {
+  max-width: 440px;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-7);
+  box-shadow: var(--shadow-md);
+}
+
+.error-boundary__card h1 {
+  font-size: var(--fs-600);
+  margin-bottom: var(--space-3);
+}
+
+.error-boundary__card p {
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-6);
+}
+
+.error-boundary__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.error-boundary__reload-btn {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--color-brand);
+  color: var(--color-ivory-50);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.error-boundary__reload-btn:hover {
+  background: var(--color-brand-hover);
+}
+
+.error-boundary__whatsapp-link {
+  color: var(--color-gold-600);
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-200);
+}

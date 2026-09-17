@@ -1,0 +1,45 @@
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  background: radial-gradient(120% 120% at 50% 20%, var(--color-plum-700) 0%, var(--color-plum-950) 70%);
+  /* animation-delay (900ms) must match Loader.jsx's `minDurationMs` prop
+     default, and var(--duration-slow) here must match Loader.jsx's
+     FADE_OUT_DURATION_MS constant — Loader.jsx times its own unmount off
+     both of these so the fade is allowed to finish playing before React
+     removes this element. See the Phase 10 QA comment there. */
+  animation: loader-fade-out var(--duration-slow) var(--ease-standard) forwards;
+  animation-delay: 900ms;
+}
+
+.loader__mark {
+  transform: rotate(-90deg);
+}
+
+.loader__track {
+  fill: none;
+  stroke: rgba(251, 243, 238, 0.14);
+  stroke-width: 3;
+}
+
+.loader__stroke {
+  fill: none;
+  stroke: var(--color-gold-500);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 188.5;
+  animation: loader-mark 1.1s var(--ease-out-soft) forwards;
+}
+
+.loader__label {
+  font-family: var(--font-display);
+  color: var(--color-text-on-dark);
+  font-size: var(--fs-400);
+  letter-spacing: 0.02em;
+  margin: 0;
+}

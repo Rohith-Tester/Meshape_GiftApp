@@ -1,0 +1,13 @@
+{
+  "name": "meshape-admin-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Trusted, locally-run setup scripts. NEVER deployed with the frontend app.",
+  "scripts": {
+    "set-admin-claim": "node setAdminClaim.js",
+    "seed": "node seedFirestore.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.5.0"
+  }
+}

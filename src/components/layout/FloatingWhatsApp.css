@@ -1,0 +1,46 @@
+.floating-whatsapp {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: var(--z-floating);
+  width: 58px;
+  height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #25d366;
+  color: var(--color-ivory-50);
+  box-shadow: var(--shadow-lg);
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.floating-whatsapp:hover {
+  transform: translateY(-3px) scale(1.04);
+}
+
+.floating-whatsapp__ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(37, 211, 102, 0.55);
+  animation: ribbon-glow 2.6s ease-out infinite;
+}
+
+@media (max-width: 640px) {
+  .floating-whatsapp {
+    width: 52px;
+    height: 52px;
+    right: var(--space-4);
+    bottom: var(--space-4);
+  }
+}
+
+/* Set by ProductDetail while a gift page is open (see ProductDetail.jsx)
+   — pushes this bubble up above the fixed Add to Cart / Order Now bar
+   on mobile so the two never overlap. Left as-is on every other page. */
+@media (max-width: 899px) {
+  body.has-sticky-product-actions .floating-whatsapp {
+    bottom: calc(84px + var(--space-3));
+  }
+}

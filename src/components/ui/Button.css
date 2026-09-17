@@ -1,0 +1,63 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
+}
+
+.btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.btn--md {
+  padding: 0.7rem 1.4rem;
+  font-size: var(--fs-200);
+}
+
+.btn--lg {
+  padding: 0.9rem 1.9rem;
+  font-size: var(--fs-300);
+}
+
+.btn--primary {
+  background: var(--color-brand);
+  color: var(--color-ivory-50);
+  box-shadow: var(--shadow-raspberry-glow);
+}
+
+.btn--primary:hover {
+  background: var(--color-brand-hover);
+  box-shadow: 0 10px 32px rgba(199, 55, 90, 0.42);
+}
+
+.btn--secondary {
+  background: transparent;
+  color: var(--color-gold-600);
+  border-color: var(--color-gold-500);
+}
+
+.btn--secondary:hover {
+  background: var(--color-blush-50);
+  border-color: var(--color-gold-600);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: inherit;
+  border-color: var(--color-border);
+}
+
+.btn--ghost:hover {
+  background: var(--color-surface-sunken);
+}

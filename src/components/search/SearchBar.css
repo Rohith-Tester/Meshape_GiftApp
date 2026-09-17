@@ -1,0 +1,146 @@
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding-inline: var(--space-4);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+
+.search-bar:focus-within {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(199, 55, 90, 0.12);
+}
+
+.search-bar__icon {
+  display: inline-flex;
+  color: var(--color-text-muted);
+}
+
+.search-bar__input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.65rem var(--space-3);
+  font-size: var(--fs-200);
+  color: var(--color-text);
+  width: 100%;
+  min-width: 0;
+}
+
+/* Bug fix: the input's own `outline: none` above has the same CSS
+   specificity as the global :focus-visible rule in global.css (both are
+   single-selector-level), so whichever rule happens to load later in
+   the final bundle can silently win — making the global brand-colored
+   (raspberry/red) focus outline reappear as a harsh rectangular box
+   around this pill-shaped input, mismatched with its rounded shape.
+   Combining the class with :focus-visible here raises this rule's
+   specificity above the bare global one, so it wins regardless of
+   stylesheet order. The existing .search-bar:focus-within glow above
+   already provides a clear, accessible focus indicator on the container,
+   so keyboard focus is still visible — just without the clashing box. */
+.search-bar__input:focus,
+.search-bar__input:focus-visible {
+  outline: none;
+}
+
+.search-bar--inline {
+  width: 100%;
+  max-width: 320px;
+}
+
+.search-bar--hero {
+  max-width: 480px;
+  padding-inline: var(--space-5);
+  box-shadow: var(--shadow-lg);
+}
+
+.search-bar--hero .search-bar__input {
+  padding-block: var(--space-3);
+  font-size: var(--fs-300);
+}
+
+.search-bar--page {
+  max-width: 100%;
+}
+
+.search-bar__suggestions {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2);
+  max-height: 380px;
+  overflow-y: auto;
+  z-index: var(--z-overlay);
+}
+
+.search-bar__empty {
+  padding: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--fs-200);
+}
+
+.search-bar__suggestion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+.search-bar__suggestion:hover,
+.search-bar__suggestion--active {
+  background: var(--color-surface-sunken);
+}
+
+.search-bar__thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.search-bar__name {
+  display: block;
+  font-size: var(--fs-200);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.search-bar__category {
+  display: block;
+  font-size: var(--fs-100);
+  color: var(--color-text-muted);
+}
+
+.search-bar__view-all {
+  width: 100%;
+  padding: var(--space-3);
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-brand);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-200);
+  cursor: pointer;
+  text-align: center;
+}
+
+.search-bar__view-all:hover {
+  color: var(--color-brand-hover);
+}

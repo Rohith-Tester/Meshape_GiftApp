@@ -1,0 +1,86 @@
+.product-gallery__main {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-surface-sunken);
+  aspect-ratio: 1 / 1;
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+.product-gallery__main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-gallery__size-badge {
+  position: absolute;
+  bottom: var(--space-4);
+  left: var(--space-4);
+  background: rgba(36, 18, 32, 0.75);
+  color: var(--color-ivory-50);
+  font-size: var(--fs-200);
+  font-weight: var(--fw-semibold);
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(2px);
+}
+
+/* Soft pulsing placeholder shown while the main image is still loading
+   (e.g. Cloudinary generating this exact size/format for the first
+   time) — replaces what used to be an unexplained flat-color blank box. */
+.product-gallery__skeleton {
+  position: absolute;
+  inset: 0;
+  background: var(--color-surface-sunken);
+  animation: product-gallery-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes product-gallery-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.product-gallery__image {
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+.product-gallery__image--loaded {
+  opacity: 1;
+}
+
+.product-gallery__thumbs {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.product-gallery__thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--duration-fast), border-color var(--duration-fast);
+}
+
+.product-gallery__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-gallery__thumb--active,
+.product-gallery__thumb:hover {
+  opacity: 1;
+  border-color: var(--color-brand);
+}

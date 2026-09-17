@@ -1,0 +1,7 @@
+.product-showcase {
+  padding-block: var(--space-9);
+}
+
+.product-showcase--sunken {
+  background: var(--color-surface-sunken);
+}

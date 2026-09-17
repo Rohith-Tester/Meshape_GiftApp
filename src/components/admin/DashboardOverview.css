@@ -1,0 +1,43 @@
+.dashboard-overview__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+.dashboard-overview__status {
+  padding: var(--space-4);
+  color: var(--color-text-muted);
+}
+
+.dashboard-overview__card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.dashboard-overview__value {
+  font-family: var(--font-display);
+  font-size: var(--fs-700);
+  color: var(--color-brand);
+  margin: 0;
+}
+
+.dashboard-overview__label {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--fs-100);
+}
+
+@media (min-width: 640px) {
+  .dashboard-overview__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-overview__grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}

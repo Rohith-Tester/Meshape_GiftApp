@@ -1,0 +1,48 @@
+rules_version = '2';
+
+// Deploy with: firebase deploy --only firestore:rules
+// Test locally first with: firebase emulators:start
+//
+// These rules are the REAL security boundary for this project. They run
+// on Google's servers and evaluate `request.auth`, which Firestore
+// itself populates only after cryptographically verifying a Firebase
+// Auth ID token — a client can never forge this by editing localStorage,
+// sessionStorage, or any other browser-side value. This is the
+// fundamental difference from the Phase 6/7 "DEMO MODE" flag it replaces.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // True only for a request carrying a validly-signed ID token whose
+    // custom claims include `admin: true`. That claim is set once, out of
+    // band, via a trusted server-side script using the Firebase Admin
+    // SDK (see admin-scripts/setAdminClaim.js) — it is never something a
+    // client can grant itself.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Products: public storefront read, admin-only write.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Offers: public storefront read (so prices/badges compute
+    // correctly for anonymous shoppers), admin-only write.
+    match /offers/{offerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Settings docs (shopGallery, business info): public read,
+    // admin-only write.
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Everything else is denied by default — there is no catch-all
+    // "allow" rule, so any collection not explicitly listed above is
+    // unreadable and unwritable from the client.
+  }
+}

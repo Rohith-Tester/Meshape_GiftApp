@@ -1,0 +1,28 @@
+.offers-section__ribbons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.offer-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--color-plum-800), var(--color-plum-700));
+  color: var(--color-ivory-50);
+  box-shadow: var(--shadow-gold-glow);
+}
+
+.offer-ribbon__percent {
+  font-family: var(--font-display);
+  font-weight: var(--fw-semibold);
+  color: var(--color-gold-200);
+}
+
+.offer-ribbon__name {
+  font-size: var(--fs-200);
+  color: var(--color-text-on-dark-muted);
+}
