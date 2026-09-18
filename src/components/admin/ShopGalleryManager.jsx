@@ -58,7 +58,7 @@ export default function ShopGalleryManager() {
 
   return (
     <div className="shop-gallery-manager">
-      <h2>Shop Gallery ({photos.length} photos)</h2>
+      <h2>Shop Gallery ({photos.length} {photos.length === 1 ? 'photo' : 'photos'})</h2>
 
       <div className="shop-gallery-manager__add">
         <select value={category} onChange={(e) => setCategory(e.target.value)}>

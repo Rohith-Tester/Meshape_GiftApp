@@ -42,27 +42,51 @@ export default function Footer() {
           © {year} {business.name}. All rights reserved.
         </p>
 
-        <a
-          className="footer__credit"
-          href="#"
-          onClick={(e) => e.preventDefault()}
-          aria-label={agency.tagline}
-          title={agency.tagline}
-        >
-          <span className="footer__credit-text">Designed &amp; Developed by</span>
-          <CraftTechMark />
-        </a>
+        {/* Fix (BUG-14): this was an <a href="#"> with preventDefault —
+            it looked and behaved like a link (pointer cursor, focusable,
+            announced as a link) but went nowhere. There is no agency URL
+            to point at, so it is simply a credit line now. Give
+            `agency.url` a value and it becomes a real link again. */}
+        {agency.url ? (
+          <a
+            className="footer__credit"
+            href={agency.url}
+            target="_blank"
+            rel="noreferrer"
+            title={agency.tagline}
+          >
+            <span className="footer__credit-text">Designed &amp; Developed by</span>
+            <CraftTechMark />
+          </a>
+        ) : (
+          <p className="footer__credit" title={agency.tagline}>
+            <span className="footer__credit-text">Designed &amp; Developed by</span>
+            <CraftTechMark />
+          </p>
+        )}
       </div>
     </footer>
   );
 }
 
 /**
- * Renders the real Craft Tech logo once it is placed at the path defined
- * in src/config/business.js. Falls back to a plain text wordmark so the
- * footer never shows a broken image before the client's asset is added.
+ * Renders the real Craft Tech logo once it is placed in public/ and
+ * `agency.logoPath` points at it. Until then this is a plain text
+ * wordmark.
+ *
+ * Fix (BUG-15): logoPath used to point unconditionally at
+ * /craft-tech-logo.svg, a file that does not exist in public/. Every
+ * single page load therefore fired a request that 404'd, and the
+ * onError handler hid the broken image so convincingly that the missing
+ * asset was invisible in review — the client's real logo would never
+ * have shown in production either. We only render an <img> when there
+ * is actually a path configured.
  */
 function CraftTechMark() {
+  if (!agency.logoPath) {
+    return <span className="footer__credit-mark">{agency.name}</span>;
+  }
+
   return (
     <span className="footer__credit-mark">
       <img

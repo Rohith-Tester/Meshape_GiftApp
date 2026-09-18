@@ -13,8 +13,14 @@
   position: absolute;
   inset: -20% -10% auto -10%;
   height: 70%;
-  background: radial-gradient(closest-side, rgba(185, 139, 78, 0.28), transparent 70%);
-  filter: blur(10px);
+  /* The `filter: blur(10px)` that used to be here forced the browser to
+     run a filter pass over a layer roughly the width of the viewport,
+     and it had to be redone whenever anything inside the hero moved —
+     which, with six floating accents and the teddy all on `infinite`
+     animations, is every frame. A radial-gradient that already fades to
+     transparent at 70% is visually indistinguishable with the blur
+     removed, so the cost bought nothing (NEW-23). */
+  background: radial-gradient(closest-side, rgba(185, 139, 78, 0.28), transparent 72%);
   z-index: -1;
 }
 
@@ -28,6 +34,10 @@
 .hero__accent {
   position: absolute;
   color: rgba(251, 243, 238, 0.5);
+  /* Six of these drift continuously, above the fold, for as long as the
+     page is open. Promoting each to its own compositor layer keeps
+     those frames off the main thread entirely (NEW-23). */
+  will-change: transform;
   animation: float-drift 6s ease-in-out infinite;
 }
 
@@ -64,7 +74,7 @@
   margin: 0 0 var(--space-4);
   opacity: 0;
   animation: rise-in var(--duration-slow) var(--ease-out-soft) forwards;
-  animation-delay: 0.1s;
+  animation-delay: 0.02s;
 }
 
 .hero__kicker-logo {
@@ -77,6 +87,23 @@
   white-space: nowrap;
 }
 
+/*
+   Entrance choreography timing (NEW-23).
+
+   These delays used to run 0.1s -> 0.82s, with each element sitting at
+   `opacity: 0` until its turn came. Two problems: the hero — the only
+   thing on screen — took most of a second to finish assembling, and
+   `.hero__subtext` is this page's Largest Contentful Paint element, so
+   Lighthouse measured LCP from the end of its 0.54s delay rather than
+   from when React actually painted. That one delay was most of the
+   1.16s "element render delay" in the LCP breakdown.
+
+   The stagger is kept, because it is the page's signature moment; it is
+   simply played at a speed that doesn't hold the content hostage. Note
+   that `animation-fill-mode: forwards` does not apply during the delay,
+   so an element with `opacity: 0` really is invisible for its whole
+   delay — shortening the delay is what makes the content appear sooner.
+*/
 .hero__headline {
   font-size: clamp(2.6rem, 6vw + 1rem, 4.5rem);
   margin-bottom: var(--space-5);
@@ -89,11 +116,11 @@
 }
 
 .hero__line:first-child {
-  animation-delay: 0.22s;
+  animation-delay: 0.05s;
 }
 
 .hero__line--accent {
-  animation-delay: 0.38s;
+  animation-delay: 0.08s;
   background: linear-gradient(90deg, var(--color-gold-200), var(--color-raspberry-300) 70%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -107,7 +134,7 @@
   max-width: 52ch;
   opacity: 0;
   animation: rise-in var(--duration-slow) var(--ease-out-soft) forwards;
-  animation-delay: 0.54s;
+  animation-delay: 0.11s;
 }
 
 .hero__search {
@@ -122,7 +149,7 @@
   max-width: 480px;
   opacity: 0;
   animation: rise-in var(--duration-slow) var(--ease-out-soft) forwards;
-  animation-delay: 0.68s;
+  animation-delay: 0.14s;
 }
 
 .hero__actions {
@@ -131,7 +158,7 @@
   gap: var(--space-4);
   opacity: 0;
   animation: rise-in var(--duration-slow) var(--ease-out-soft) forwards;
-  animation-delay: 0.82s;
+  animation-delay: 0.17s;
 }
 
 .hero__actions .btn--secondary {
@@ -173,6 +200,11 @@
   right: var(--space-4);
   bottom: 90px;
   width: clamp(140px, 42vw, 220px);
+  /* The child <svg> carries a drop-shadow filter. Without promoting this
+     element, that filter had to be recomputed on every frame of the bob;
+     with its own layer the subtree is rasterized once and then only
+     composited (NEW-23). */
+  will-change: transform;
   animation: hero-teddy-bob 5s ease-in-out infinite;
 }
 

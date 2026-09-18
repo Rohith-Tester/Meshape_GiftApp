@@ -25,7 +25,13 @@
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import admin from 'firebase-admin';
+// Security audit 2026-09-18 (SEC-06): firebase-admin was pinned to ^12,
+// which pulls a `uuid` carrying GHSA-w5hq-g745-h8pq. The fix is v14, and
+// v14 removes the old namespaced API (`admin.auth()`,
+// `admin.credential.cert()`) in favour of these modular entry points.
+// Same behaviour, different import shape.
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -37,12 +43,12 @@ if (!uid) {
 
 const serviceAccount = JSON.parse(readFileSync(join(__dirname, 'service-account-key.json'), 'utf8'));
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+const app = initializeApp({
+  credential: cert(serviceAccount),
 });
 
 try {
-  await admin.auth().setCustomUserClaims(uid, { admin: true });
+  await getAuth(app).setCustomUserClaims(uid, { admin: true });
   console.log(`✅ Granted admin claim to user ${uid}.`);
   console.log('Sign out and back in on /admin for it to take effect immediately.');
   process.exit(0);

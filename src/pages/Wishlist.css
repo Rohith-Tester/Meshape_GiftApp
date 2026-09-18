@@ -111,3 +111,11 @@
     align-items: center;
   }
 }
+
+/* Unavailable wishlist item (NEW-03). */
+.wishlist-item__unavailable {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: var(--color-rose-600, #c2185b);
+  font-weight: 600;
+}

@@ -51,8 +51,8 @@ export default function AdminLogin() {
         <div className="admin-login__card">
           <h1>Signed In — Not an Admin Account</h1>
           <p className="admin-login__explainer">
-            You're signed in as <strong>{user.email}</strong>, but this account doesn't have admin access. If this
-            is unexpected, run <code>admin-scripts/setAdminClaim.js</code> for this account's UID, then sign out and
+            You’re signed in as <strong>{user.email}</strong>, but this account doesn’t have admin access. If this
+            is unexpected, run <code>admin-scripts/setAdminClaim.js</code> for this account’s UID, then sign out and
             back in.
           </p>
           <button type="button" className="admin-login__demo-btn" onClick={logout}>

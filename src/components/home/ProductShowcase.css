@@ -5,3 +5,38 @@
 .product-showcase--sunken {
   background: var(--color-surface-sunken);
 }
+
+/* Placeholder that holds the section's height while products load (NEW-18). */
+.product-showcase__skeleton {
+  position: relative;
+  overflow: hidden;
+  min-height: 320px;
+  border-radius: var(--radius-lg, 16px);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/*
+  The sheen used to be the skeleton's own background, animated by moving
+  `background-position` across a 200%-wide gradient. That repaints the
+  whole 320px-tall block on every frame, forever, and Home renders two
+  of these at once — with Firestore now loading after first paint
+  (see src/lib/firebase.js) they are also on screen for longer. It was
+  one of the largest single contributors to the rendering and
+  style/layout time Lighthouse attributed to this page (NEW-23).
+
+  Moving the sheen to a pseudo-element animated with `transform` keeps
+  the effect identical and hands it entirely to the compositor.
+*/
+.product-showcase__skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.05), transparent);
+  will-change: transform;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}

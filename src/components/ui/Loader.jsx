@@ -22,18 +22,41 @@ import './Loader.css';
  */
 const FADE_OUT_DURATION_MS = 520; // must match var(--duration-slow) in tokens.css
 
-export default function Loader({ minDurationMs = 900 }) {
+/**
+ * Fix (NEW-05): this used to run on a fixed 900 + 520 ms timer, covering
+ * the whole viewport at modal z-index — 1,363 ms of dead,
+ * un-interactable time on EVERY page load.
+ *
+ * Revised (NEW-23): the first version of this fix held the splash until
+ * the catalogue had loaded. That turned out to be actively harmful. The
+ * hero is STATIC content — it needs nothing from Firestore — and it is
+ * also the Largest Contentful Paint element, so covering it until a
+ * database round-trip finished delayed LCP by seconds on a slow
+ * connection. The catalogue sections below have their own skeletons
+ * (NEW-18), so late data is already handled gracefully without hiding
+ * the whole page behind an overlay.
+ *
+ * So: a brief brand moment on a fixed, short timer, which stops
+ * swallowing clicks the instant it begins fading, and never waits on
+ * the network.
+ */
+export default function Loader({ minDurationMs = 450 }) {
   const [visible, setVisible] = useState(true);
+  const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(false), minDurationMs + FADE_OUT_DURATION_MS);
-    return () => clearTimeout(timer);
+    const fade = setTimeout(() => setLeaving(true), minDurationMs);
+    const remove = setTimeout(() => setVisible(false), minDurationMs + FADE_OUT_DURATION_MS);
+    return () => {
+      clearTimeout(fade);
+      clearTimeout(remove);
+    };
   }, [minDurationMs]);
 
   if (!visible) return null;
 
   return (
-    <div className="loader" role="status" aria-live="polite">
+    <div className={`loader ${leaving ? 'loader--leaving' : ''}`} role="status" aria-live="polite">
       <svg
         className="loader__mark"
         width="72"

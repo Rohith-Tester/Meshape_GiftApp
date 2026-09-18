@@ -3,11 +3,20 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 const WishlistContext = createContext(null);
 const STORAGE_KEY = 'meshape.wishlist.v1';
 
+/**
+ * Security audit 2026-09-18 (SEC-07): same guard as CartContext — a
+ * stored value that parses but isn't an array of ids would crash
+ * `wishlistIds.includes(...)` on first render and keep crashing on every
+ * reload. See src/context/CartContext.jsx for the full reasoning.
+ */
 function readStoredWishlist() {
   if (typeof window === 'undefined') return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((id) => typeof id === 'string');
   } catch {
     return [];
   }

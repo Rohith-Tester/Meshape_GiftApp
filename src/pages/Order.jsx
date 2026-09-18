@@ -13,6 +13,7 @@ import { generateOrderId } from '../utils/orderId';
 import { buildWhatsAppMessage, buildWhatsAppLink } from '../utils/whatsappMessage';
 import { ROUTES } from '../config/routes';
 import { useDocumentHead } from '../hooks/useDocumentHead';
+import { useCartLines, summarizeCartLines } from '../hooks/useCartLines';
 import './Order.css';
 
 const EMPTY_FORM = {
@@ -31,7 +32,12 @@ const EMPTY_FORM = {
 export default function Order() {
   useDocumentHead({ title: 'Complete Your Order', description: 'Choose pickup or delivery and review your order.', noindex: true });
 
-  const { items, subtotal, clearCart } = useCart();
+  const { clearCart } = useCart();
+  // Fix (BUG-04 / NEW-02 / NEW-03): the order is built from lines
+  // reconciled against the live catalogue, never from the raw snapshot,
+  // so a deleted, unavailable or repriced item can't reach the shop.
+  const lines = useCartLines();
+  const { orderable: items, subtotal, hasProblems } = summarizeCartLines(lines);
   const [fulfillment, setFulfillment] = useState(FULFILLMENT_METHODS.pickup);
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
@@ -39,12 +45,34 @@ export default function Order() {
   // Generated once per checkout session — editing the form after review
   // keeps the same Order ID rather than minting a new one on every retry.
   const [order, setOrder] = useState(null); // { orderId, generatedAt }
+  // Frozen copy of the message/link taken at the moment the order is
+  // sent. Clearing the cart (BUG-02) empties `items`, which would
+  // otherwise recompute the message down to "no items, Total ₹0" — so
+  // "Reopen WhatsApp" would have sent a blank order.
+  const [sentSnapshot, setSentSnapshot] = useState(null);
+  const sent = sentSnapshot !== null;
 
-  const message = useMemo(() => {
+  // The reconciled price is what the customer pays, so the message is
+  // built from `currentPrice` rather than the stored snapshot.
+  const messageItems = useMemo(
+    () => items.map((line) => ({ ...line, finalPrice: line.currentPrice ?? line.finalPrice })),
+    [items]
+  );
+
+  const liveMessage = useMemo(() => {
     if (!order) return '';
-    return buildWhatsAppMessage({ orderId: order.orderId, fulfillment, form, items, subtotal, generatedAt: order.generatedAt });
-  }, [order, fulfillment, form, items, subtotal]);
+    return buildWhatsAppMessage({
+      orderId: order.orderId,
+      fulfillment,
+      form,
+      items: messageItems,
+      subtotal,
+      generatedAt: order.generatedAt,
+    });
+  }, [order, fulfillment, form, messageItems, subtotal]);
 
+  // Once sent, always show and reuse exactly what was sent.
+  const message = sentSnapshot ? sentSnapshot.message : liveMessage;
   const whatsappLink = useMemo(() => (message ? buildWhatsAppLink(message) : ''), [message]);
 
   // Same technique as ProductDetail: adds a class only while this page
@@ -64,6 +92,23 @@ export default function Order() {
             description="Add a few gifts before placing an order."
             actionLabel="Browse All Gifts"
             actionTo={ROUTES.products}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Something in the cart changed after the customer left it — send them
+  // back to settle it rather than quietly ordering the rest.
+  if (hasProblems && !order) {
+    return (
+      <div className="section">
+        <div className="container">
+          <EmptyState
+            title="Some gifts in your cart have changed"
+            description="One or more items were repriced or are no longer available. Review your cart and we'll pick this back up."
+            actionLabel="Review My Cart"
+            actionTo={ROUTES.cart}
           />
         </div>
       </div>
@@ -105,7 +150,22 @@ export default function Order() {
     setForm(EMPTY_FORM);
     setErrors({});
     setReviewed(false);
+    setSentSnapshot(null);
     setFulfillment(FULFILLMENT_METHODS.pickup);
+  }
+
+  /**
+   * Fix (BUG-02): called when the customer opens WhatsApp, which is the
+   * point the order actually leaves the site. The cart is emptied here
+   * so a sent order can't be silently placed twice; the confirmation
+   * (Order ID + message + a Reopen WhatsApp link) stays on screen,
+   * because `order` is held in component state rather than derived from
+   * the cart.
+   */
+  function handleSent() {
+    // Freeze BEFORE clearing, so the snapshot still has the items.
+    setSentSnapshot({ message: liveMessage });
+    clearCart();
   }
 
   return (
@@ -134,12 +194,14 @@ export default function Order() {
               message={message}
               whatsappLink={whatsappLink}
               onStartNewOrder={handleStartNewOrder}
+              onSent={handleSent}
+              sent={sent}
             />
           )}
         </div>
 
         <aside id="order-review-panel">
-          <OrderReviewSummary items={items} subtotal={subtotal} fulfillment={fulfillment} form={form} />
+          <OrderReviewSummary items={messageItems} subtotal={subtotal} fulfillment={fulfillment} form={form} />
         </aside>
       </div>
     </div>

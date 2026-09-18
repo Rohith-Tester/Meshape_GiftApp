@@ -89,3 +89,46 @@
     grid-template-columns: 2fr 1fr;
   }
 }
+
+/* Catalogue-change notice (BUG-04 / NEW-02 / NEW-03). */
+.cart-page__notice {
+  border: 1px solid var(--color-rose-300, #e6b9cc);
+  background: var(--color-blush-50, #fdf2f6);
+  border-radius: var(--radius-md, 12px);
+  padding: var(--space-4, 16px);
+  margin-bottom: var(--space-5, 20px);
+}
+
+.cart-page__notice-title {
+  font-weight: 700;
+  margin: 0 0 var(--space-2, 8px);
+}
+
+.cart-page__notice-list {
+  margin: 0 0 var(--space-3, 12px);
+  padding-left: 1.1rem;
+  font-size: 0.92rem;
+}
+
+.cart-page__notice-btn {
+  border: 1px solid currentColor;
+  background: transparent;
+  color: var(--color-rose-600, #c2185b);
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.cart-page__notice-btn:hover {
+  background: var(--color-rose-600, #c2185b);
+  color: #fff;
+}
+
+.cart-summary__blocked {
+  margin-top: var(--space-2, 8px);
+  font-size: 0.85rem;
+  color: var(--color-rose-600, #c2185b);
+  text-align: center;
+}

@@ -44,7 +44,7 @@ export default class ErrorBoundary extends Component {
           <div className="error-boundary__card">
             <h1>Something went wrong</h1>
             <p>
-              We're sorry — this page hit an unexpected error. Please try again, or reach us directly if it keeps
+              We’re sorry — this page hit an unexpected error. Please try again, or reach us directly if it keeps
               happening.
             </p>
             <div className="error-boundary__actions">

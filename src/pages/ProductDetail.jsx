@@ -10,6 +10,8 @@ import { useOffers } from '../context/OffersContext';
 import { getProductPricing } from '../utils/pricing';
 import { getRelatedProducts } from '../utils/relatedProducts';
 import { formatINR } from '../utils/currency';
+import { getProductImages } from '../utils/productImage';
+import { safeExternalUrl } from '../utils/safeUrl';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { ROUTES } from '../config/routes';
@@ -33,9 +35,14 @@ export default function ProductDetail() {
 
   // Called unconditionally (hooks can't follow an early return) — falls
   // back to a generic title/description when the product isn't found.
+  // A product with no description of its own still deserves a sensible,
+  // product-specific one rather than the site-wide default (BUG-08).
   useDocumentHead({
     title: product ? product.name : 'Product Not Found',
-    description: product ? product.description : 'This product could not be found.',
+    description: product
+      ? product.description?.trim() ||
+        `${product.name} — a personalized ${product.category} gift from MeShape Gift Shop, ready for pickup or delivery across India.`
+      : 'This product could not be found.',
   });
 
   // Bug fix: /product/:id matches the same route for every product, so
@@ -92,6 +99,11 @@ export default function ProductDetail() {
 
   const pricing = getProductPricing(product, offers);
   const wishlisted = isWishlisted(product.id);
+  // Fix (NEW-03 / TC-64): the catalogue, search and related products all
+  // respected `available`, but this page did not — so a product the
+  // admin had taken off sale still opened on its direct link with fully
+  // working Add to Cart and Order Now buttons.
+  const forSale = product.available !== false;
 
   function completeAddToCart(customization) {
     addItem(product, pricing, 1, customization);
@@ -140,7 +152,7 @@ export default function ProductDetail() {
           durable fix, rather than patching each piece of state one by
           one. */}
       <div className="container product-detail__grid">
-        <ProductGallery images={product.images} name={product.name} size={product.size} />
+        <ProductGallery images={getProductImages(product)} name={product.name} size={product.size} />
 
         <div className="product-detail__info">
           <p className="product-detail__category">{product.category}</p>
@@ -168,9 +180,13 @@ export default function ProductDetail() {
             </p>
           )}
 
-          {product.instagramUrl && (
+          {/* Security audit 2026-09-18 (SEC-04): admin-supplied href from
+              Firestore, guarded to http(s) — React does not sanitize
+              href, so a stored `javascript:` value would otherwise
+              render as a working script link. */}
+          {safeExternalUrl(product.instagramUrl) && (
             <a
-              href={product.instagramUrl}
+              href={safeExternalUrl(product.instagramUrl)}
               target="_blank"
               rel="noreferrer"
               className="product-detail__instagram-link"
@@ -189,14 +205,21 @@ export default function ProductDetail() {
             </div>
           )}
 
-          <div className="product-detail__actions">
-            <Button variant="primary" size="lg" onClick={handleAddToCart}>
-              Add to Cart
-            </Button>
-            <Button variant="secondary" size="lg" onClick={handleOrderNow}>
-              Order Now
-            </Button>
-          </div>
+          {forSale ? (
+            <div className="product-detail__actions">
+              <Button variant="primary" size="lg" onClick={handleAddToCart}>
+                Add to Cart
+              </Button>
+              <Button variant="secondary" size="lg" onClick={handleOrderNow}>
+                Order Now
+              </Button>
+            </div>
+          ) : (
+            <p className="product-detail__unavailable" role="status">
+              This gift is currently unavailable. Message us on WhatsApp and we’ll let you know when it’s back,
+              or browse the rest of the collection below.
+            </p>
+          )}
 
           <div className="product-detail__secondary-row">
             <button

@@ -29,9 +29,36 @@ if you want a staging/testing environment).
 5. **Create a Cloudinary account** at https://cloudinary.com, then:
    - Copy your **Cloud Name** from the dashboard into `.env`
    - Settings → Upload → Upload presets → Add upload preset → set
-     **Signing Mode to "Unsigned"**, restrict allowed formats to
-     jpg/png/webp, set a max file size (~5MB), and set a fixed folder —
-     copy the preset name into `.env`
+     **Signing Mode to "Unsigned"**, then set all three of:
+     | Setting | Value |
+     | --- | --- |
+     | Allowed formats | `jpg, png, webp` |
+     | Max file size | `5000000` (5 MB) |
+     | Folder | `meshape/products` |
+   - Copy the preset name into `.env`
+   - **Or set all three in one command** (needs your Cloudinary API key and
+     secret, which you pass as environment variables — never commit them):
+     ```bash
+     node admin-scripts/configure-cloudinary-preset.js          # preview
+     node admin-scripts/configure-cloudinary-preset.js --apply  # apply
+     ```
+   - **Then verify it, don't assume it:**
+     ```bash
+     node admin-scripts/verify-cloudinary-preset.js
+     ```
+
+   > ⚠️ **These three settings are the only server-side protection this
+   > project has on image uploads.** The preset name is public — it ships
+   > in the client bundle, because unsigned uploads are the only option
+   > without a paid Firebase plan. The checks in `src/utils/validation.js`
+   > run in the browser and anyone can skip them with a single `curl`.
+   >
+   > This matters because it has already gone wrong once: a QA probe on
+   > 2026-09-18 found the live preset accepting GIFs and BMPs, writing to
+   > the account root, with Cloudinary's 10 MB default ceiling — while the
+   > code claimed all three restrictions were in place. Nothing in the app
+   > can detect that, which is why the verify script above exists. Run it
+   > after any change to the preset, and before launch.
 6. **Run the admin setup scripts** — see `admin-scripts/README.md` for
    full steps (creating the one admin user, granting the admin claim,
    and seeding the database with the starting demo catalogue)

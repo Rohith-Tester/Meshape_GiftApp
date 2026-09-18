@@ -45,7 +45,11 @@ export const business = {
     // Digits-only version for wa.me links (no +, spaces, or dashes).
     orderWhatsappDigits: '919360762534',
     shopPhone: '+91 93607 62534',
-    shopPhoneDigits: '919360762534',
+    // Fix (BUG-23): tel: links rendered as tel:919360762534 with no
+    // international prefix. Most Indian handsets cope, but the '+' is
+    // what makes the number unambiguous from any network or country,
+    // and it matches how the number is displayed on the page.
+    shopPhoneDigits: '+919360762534',
   },
 
   social: {
@@ -69,17 +73,25 @@ export const agency = {
   // src/assets/branding/README.md for exactly where to place the
   // client-approved logo asset.
   //
+  // Optional link for the footer credit. Left empty because there is no
+  // agency URL to point at yet — Footer.jsx renders the credit as plain
+  // text rather than a dead link while this is empty (BUG-14).
+  url: '',
+
   // Bug fix (Phase 10 QA): this previously pointed at
   // /src/assets/branding/craft-tech-logo.svg, which only resolves during
   // `npm run dev` (Vite's dev server serves the whole project root) — a
   // production `vite build` never copies arbitrary files out of src/
   // into dist/, only explicitly `import`-ed assets or anything placed in
-  // public/. That meant even a correctly-placed real logo would silently
-  // 404 in production, masked by Footer.jsx's onError fallback (so it
-  // would have looked fine locally while never actually showing the
-  // client's real logo once deployed). Anything referenced as a raw URL
-  // string like this must live in public/ instead.
-  logoPath: '/craft-tech-logo.svg',
+  // public/. Anything referenced as a raw URL string like this must live
+  // in public/ instead.
+  //
+  // Fix (BUG-15): it then pointed at /craft-tech-logo.svg, which was
+  // never added to public/ either — so every page load fired a request
+  // that 404'd, hidden by Footer.jsx's onError fallback. Null until the
+  // client's approved asset actually exists: drop the file into public/
+  // and set this to '/craft-tech-logo.svg' to switch the logo on.
+  logoPath: null,
 };
 
 export default business;

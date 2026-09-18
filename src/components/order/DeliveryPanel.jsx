@@ -1,14 +1,27 @@
 import { INDIAN_STATES, DELIVERY_CHARGE_TEXT } from '../../config/delivery';
 import './OrderForms.css';
 
+/**
+ * Security audit 2026-09-18 (SEC-08): every value typed here is
+ * URL-encoded into the wa.me link built by
+ * src/utils/whatsappMessage.js. Nothing bounded these fields, so a
+ * paste of a few hundred kB produced a link long enough that WhatsApp
+ * (and some browsers) silently truncate or refuse it — the customer
+ * presses "Send Order" and nothing usable reaches the shop, with no
+ * error shown. The pincode field already had a maxLength; these now
+ * match it. The limits are generous for real Indian addresses.
+ *
+ * validateDeliveryForm still does the real checking; this only stops a
+ * value from growing without bound before it gets there.
+ */
 const FIELDS = [
-  { key: 'name', label: 'Your Name', type: 'text' },
-  { key: 'mobile', label: 'Mobile Number', type: 'tel', placeholder: '10-digit mobile number' },
-  { key: 'houseNumber', label: 'House / Door Number', type: 'text' },
-  { key: 'street', label: 'Street', type: 'text' },
-  { key: 'area', label: 'Area', type: 'text' },
-  { key: 'city', label: 'City', type: 'text' },
-  { key: 'district', label: 'District', type: 'text' },
+  { key: 'name', label: 'Your Name', type: 'text', maxLength: 80 },
+  { key: 'mobile', label: 'Mobile Number', type: 'tel', placeholder: '10-digit mobile number', maxLength: 20 },
+  { key: 'houseNumber', label: 'House / Door Number', type: 'text', maxLength: 60 },
+  { key: 'street', label: 'Street', type: 'text', maxLength: 120 },
+  { key: 'area', label: 'Area', type: 'text', maxLength: 120 },
+  { key: 'city', label: 'City', type: 'text', maxLength: 80 },
+  { key: 'district', label: 'District', type: 'text', maxLength: 80 },
 ];
 
 export default function DeliveryPanel({ form, errors, onChange }) {
@@ -20,6 +33,7 @@ export default function DeliveryPanel({ form, errors, onChange }) {
           <input
             id={`delivery-${field.key}`}
             type={field.type}
+            maxLength={field.maxLength}
             value={form[field.key]}
             placeholder={field.placeholder}
             onChange={(e) => onChange(field.key, e.target.value)}
@@ -59,6 +73,7 @@ export default function DeliveryPanel({ form, errors, onChange }) {
         <textarea
           id="delivery-instructions"
           rows={2}
+          maxLength={500}
           value={form.instructions}
           onChange={(e) => onChange('instructions', e.target.value)}
         />

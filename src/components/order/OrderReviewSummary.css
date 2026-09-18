@@ -102,3 +102,9 @@
   font-weight: var(--fw-semibold);
   color: var(--color-text);
 }
+
+/* Delivery instructions echoed back to the customer (BUG-03). */
+.order-review__instructions {
+  margin-top: var(--space-2);
+  font-size: 0.88rem;
+}

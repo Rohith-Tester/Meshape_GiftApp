@@ -23,10 +23,18 @@ function GalleryImage({ src, alt }) {
   return (
     <>
       {!loaded && <div className="product-gallery__skeleton" aria-hidden="true" />}
+      {/* This is the Largest Contentful Paint element of every product
+          page, and it cannot be discovered in the HTML — its URL only
+          exists once Firestore has returned the product. fetchPriority
+          at least makes the browser treat it as important the moment
+          React does mount it, instead of queueing it behind the other
+          images on the page (NEW-23). */}
       <img
         src={src}
         alt={alt}
         className={`product-gallery__image ${loaded ? 'product-gallery__image--loaded' : ''}`}
+        fetchPriority="high"
+        decoding="sync"
         onLoad={() => setLoaded(true)}
       />
     </>
@@ -35,7 +43,7 @@ function GalleryImage({ src, alt }) {
 
 export default function ProductGallery({ images, name, size }) {
   const [active, setActive] = useState(0);
-  const mainSrc = getOptimizedImageUrl(images[active], { width: 900 });
+  const mainSrc = getOptimizedImageUrl(images[active], { width: 700 });
 
   return (
     <div className="product-gallery">

@@ -1,6 +1,6 @@
 import SectionHeading from '../ui/SectionHeading';
 import ProductGrid from '../product/ProductGrid';
-import { getActiveOfferForProduct } from '../../utils/pricing';
+import { getActiveOfferForProduct, getOfferStatus } from '../../utils/pricing';
 import './OffersSection.css';
 
 /**
@@ -10,15 +10,17 @@ import './OffersSection.css';
  */
 export default function OffersSection({ products, offers }) {
   const now = new Date();
-  const discountedProducts = products.filter((p) => getActiveOfferForProduct(p, offers, now));
+  // Fix (NEW-03): never surface a product that isn't for sale, even if
+  // an offer technically still applies to it.
+  const discountedProducts = products.filter((p) => p.available && getActiveOfferForProduct(p, offers, now));
 
   if (discountedProducts.length === 0) return null;
 
-  const activeOffers = offers.filter((offer) => {
-    const start = offer.startDate ? new Date(`${offer.startDate}T00:00:00`) : null;
-    const end = offer.endDate ? new Date(`${offer.endDate}T23:59:59`) : null;
-    return offer.active && (!start || now >= start) && (!end || now <= end);
-  });
+  // Fix (NEW-13): this used to re-implement the "is this offer live?"
+  // date comparison inline, giving the project two copies of the same
+  // rule that could drift apart. It now asks pricing.js, which is the
+  // single definition used for prices, badges and the admin table.
+  const activeOffers = offers.filter((offer) => getOfferStatus(offer, now) === 'active');
 
   return (
     <section className="section offers-section">

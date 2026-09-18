@@ -86,6 +86,29 @@ ol {
 
 .section {
   padding-block: var(--space-7) var(--space-9);
+  /*
+    Skip rendering work for sections that are off screen (NEW-23).
+
+    Home mounts eight sections in one synchronous React render — two
+    product showcases, offers, why-choose-us, the shop preview and the
+    call to action — and the browser was doing full style, layout and
+    paint for every one of them before it could show the hero. Only the
+    hero is in the viewport on a phone, so the rest was work the person
+    could not see, done before the work they were waiting for. It was
+    most of the ~2.7s "element render delay" Lighthouse attributed to
+    this page's Largest Contentful Paint.
+
+    `auto` only skips content that is actually off screen; a section
+    scrolled into view renders exactly as before, and a section already
+    in the viewport (the product grid on the catalogue page, say) is
+    never skipped. `contain-intrinsic-size: auto` makes the browser
+    remember each section's real height once it has been rendered once,
+    so the scrollbar and anchor links stay correct rather than jumping —
+    the placeholder height is only used before a section has ever been
+    measured.
+  */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
 }
 
 @media (min-width: 768px) {
@@ -120,4 +143,11 @@ ol {
 
 .skip-link:focus {
   top: var(--space-4);
+}
+
+/* Unknown-category notice on the catalogue page (NEW-06). */
+.products-page__unknown-category {
+  margin: 0 0 var(--space-4);
+  font-size: 0.9rem;
+  color: var(--color-plum-700);
 }
