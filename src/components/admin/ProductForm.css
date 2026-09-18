@@ -86,3 +86,42 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Concurrent-edit warning (NEW-21). */
+.product-form__conflict {
+  border: 1px solid #b26a00;
+  background: #fff7e8;
+  border-radius: var(--radius-md, 12px);
+  padding: var(--space-4, 16px);
+  margin-bottom: var(--space-4, 16px);
+  font-size: 0.9rem;
+}
+
+.product-form__conflict p {
+  margin: 0 0 var(--space-3, 12px);
+}
+
+.product-form__conflict-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4, 16px);
+  flex-wrap: wrap;
+}
+
+.product-form__conflict-actions button {
+  border: 1px solid #b26a00;
+  background: transparent;
+  color: #8a5200;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.product-form__conflict-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}

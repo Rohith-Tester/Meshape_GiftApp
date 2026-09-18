@@ -22,10 +22,33 @@
  * budget/no-card constraint ruled out. See PROJECT_REQUIREMENTS.md →
  * "Phase 8 architecture notes" for the full tradeoff.
  *
- * Mitigations actually in place: the preset (configured in the Cloudinary
- * dashboard, not in this code) restricts allowed formats, max file size,
- * and the destination folder. Client-side validation in
- * src/utils/validation.js also runs before this function is ever called.
+ * ⚠️ VERIFIED 2026-09-18 — the preset restrictions are NOT configured.
+ *
+ * This comment previously claimed the preset "restricts allowed formats,
+ * max file size, and the destination folder". Probing the live preset
+ * directly (see admin-scripts/verify-cloudinary-preset.js) showed none
+ * of that is true:
+ *
+ *   - a .gif and a .bmp were both ACCEPTED (should be jpg/png/webp only)
+ *   - uploads land in the account ROOT, not a fixed folder
+ *   - the size ceiling is Cloudinary's 10 MB default, not the ~5 MB
+ *     documented here
+ *
+ * So the client-side checks in src/utils/validation.js are currently the
+ * ONLY thing enforcing any of it — and anyone can skip them with a
+ * single curl call, because the preset name ships in this bundle.
+ *
+ * The exposure is unchanged in KIND (wasted Cloudinary quota and junk
+ * assets, never site compromise — the storefront only renders URLs that
+ * an admin wrote into Firestore, which firestore.rules protects). But it
+ * is larger than it was documented to be.
+ *
+ * TO FIX — three settings in the Cloudinary dashboard, no code change:
+ *   Settings → Upload → Upload presets → meshape_unsigned → Edit
+ *     1. Allowed formats:  jpg, png, webp
+ *     2. Max file size:    5000000  (5 MB)
+ *     3. Folder:           meshape/products
+ *   Then re-run:  node admin-scripts/verify-cloudinary-preset.js
  */
 export async function uploadToCloudinary(file) {
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;

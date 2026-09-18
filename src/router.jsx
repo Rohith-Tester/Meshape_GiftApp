@@ -4,6 +4,7 @@ import Layout from './components/layout/Layout';
 import RouteLoadingFallback from './components/system/RouteLoadingFallback';
 import { ROUTES } from './config/routes';
 
+import RouteErrorBoundary from './components/system/RouteErrorBoundary';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -25,7 +26,7 @@ import NotFound from './pages/NotFound';
  * or how auth/Firestore/Cloudinary behave was touched, only how (and
  * when) their code is loaded.
  */
-const AdminShell = lazy(() => import('./components/admin/AdminShell'));
+const AdminRoot = lazy(() => import('./components/admin/AdminRoot'));
 const ProtectedAdminRoute = lazy(() => import('./components/admin/ProtectedAdminRoute'));
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
   {
     path: ROUTES.home,
     element: <Layout />,
+    // NEW-19: without this, React Router renders its own raw error
+    // page (with a stack trace) for any error thrown inside a route,
+    // and App.jsx's <ErrorBoundary> never gets a chance to run.
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <Home /> },
       { path: ROUTES.products.slice(1), element: <Products /> },
@@ -56,7 +61,8 @@ const router = createBrowserRouter([
     // top bar instead. Kept as its own route tree, separate from the
     // customer Layout above, and lazy-loaded as its own chunk (see above).
     path: 'admin',
-    element: withSuspense(<AdminShell />),
+    element: withSuspense(<AdminRoot />),
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: withSuspense(<AdminLogin />) },
       {

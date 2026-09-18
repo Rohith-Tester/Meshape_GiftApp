@@ -36,13 +36,56 @@ function writeSequenceState(state) {
   }
 }
 
+/**
+ * Four characters from an unambiguous alphabet — no O/0 or I/1, so the
+ * shop owner can read an ID back over the phone without confusion.
+ */
+const SUFFIX_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+function randomSuffix(length = 4) {
+  const cryptoObj = typeof window !== 'undefined' ? window.crypto : undefined;
+  const bytes = new Uint8Array(length);
+  if (cryptoObj?.getRandomValues) {
+    cryptoObj.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < length; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  let out = '';
+  for (let i = 0; i < length; i += 1) {
+    out += SUFFIX_ALPHABET[bytes[i] % SUFFIX_ALPHABET.length];
+  }
+  return out;
+}
+
+/**
+ * Fix (BUG-05): the per-browser counter alone meant every customer's
+ * first order of the day was MS-YYYYMMDD-001, so two customers could
+ * hold the same Order ID and the shop had no way to tell them apart.
+ * A random suffix is appended, which makes a same-day collision
+ * vanishingly unlikely (about 1 in a million per shared sequence
+ * number) without needing a server.
+ *
+ * The date stamp and the per-browser sequence are both kept: they make
+ * IDs readable and keep one customer's own orders in order. The suffix
+ * is what makes them unique ACROSS customers — including the case where
+ * a device's clock is wrong or crosses a timezone and the sequence
+ * restarts on a date that has already been used.
+ */
 export function generateOrderId(date = new Date()) {
   const stamp = todayStamp(date);
   const stored = readSequenceState();
 
-  const nextSeq = stored && stored.stamp === stamp ? stored.seq + 1 : 1;
+  // Security audit 2026-09-18 (SEC-07): `stored.seq` was trusted to be a
+  // number. localStorage holds strings, so a value of "1" (from a hand-
+  // edit, an extension, or a future format change) made this `"1" + 1`
+  // === "11", and the order numbers the shop reads back would run 11,
+  // 111, 1111. Falling back to 0 for anything that isn't a finite number
+  // restarts the day's count instead of corrupting it.
+  const storedSeq =
+    stored && stored.stamp === stamp && Number.isFinite(stored.seq) ? stored.seq : 0;
+  const nextSeq = storedSeq + 1;
   writeSequenceState({ stamp, seq: nextSeq });
 
   const seqText = String(nextSeq).padStart(3, '0');
-  return `MS-${stamp}-${seqText}`;
+  return `MS-${stamp}-${seqText}-${randomSuffix()}`;
 }

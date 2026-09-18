@@ -21,24 +21,120 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.admin == true;
     }
 
-    // Products: public storefront read, admin-only write.
+    // ---------------------------------------------------------------
+    // Fix (NEW-20): these rules authenticated WHO could write but never
+    // checked WHAT was written. Verified against the emulator, an admin
+    // could store a product with a negative price, a price of 0, a price
+    // as the string "not-a-number", no name at all, or a completely
+    // empty document — any of which render as nonsense on the storefront
+    // (a ₹0 gift, or an unformatted NaN price) and are impossible to
+    // notice until a customer hits them.
+    //
+    // Client-side validation exists in ProductForm/OfferForm, but the
+    // rules are the only check that cannot be bypassed, so the same
+    // invariants belong here too.
+    // ---------------------------------------------------------------
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isNonEmptyString(value) {
+      return value is string && value.size() > 0 && value.size() <= 500;
+    }
+
+    // ---------------------------------------------------------------
+    // Fix (SEC-04, security audit 2026-09-18): the product rules below
+    // validated name/category/price/images but said nothing about
+    // `instagramUrl`, which the storefront renders directly into an
+    // `<a href>` on every product card and product page. React does not
+    // sanitize href values, so a document carrying
+    // `instagramUrl: "javascript:..."` produced a working script link
+    // for every visitor. ProductForm refuses such a value, but the form
+    // is not the only way a document reaches this collection — the
+    // Firestore console, a REST call with an admin token, or an import
+    // script all skip it. The rules do not.
+    //
+    // Optional fields are checked as "absent OR well-formed", so a
+    // product that simply has no Instagram link still saves.
+    // ---------------------------------------------------------------
+
+    function isHttpUrl(value) {
+      return value is string
+        && value.size() <= 2000
+        && value.matches('https?://.*');
+    }
+
+    function validInstagramUrl() {
+      return !('instagramUrl' in incoming())
+        || incoming().instagramUrl == ''
+        || isHttpUrl(incoming().instagramUrl);
+    }
+
+    // Free-text fields are capped so a single document cannot be used to
+    // push an unbounded payload to every storefront visitor.
+    function validOptionalText(field, maxLength) {
+      return !(field in incoming())
+        || (incoming()[field] is string && incoming()[field].size() <= maxLength);
+    }
+
+    function validProduct() {
+      return isNonEmptyString(incoming().name)
+        && isNonEmptyString(incoming().category)
+        && incoming().price is number
+        && incoming().price > 0
+        && incoming().price <= 1000000
+        && incoming().available is bool
+        && incoming().images is list
+        && incoming().images.size() > 0
+        && incoming().images.size() <= 12
+        && validInstagramUrl()
+        && validOptionalText('description', 5000)
+        && validOptionalText('size', 200);
+    }
+
+    function validOffer() {
+      return isNonEmptyString(incoming().name)
+        && incoming().discountPercent is number
+        && incoming().discountPercent > 0
+        && incoming().discountPercent <= 100
+        && incoming().appliesTo in ['all', 'category', 'product']
+        && incoming().active is bool;
+    }
+
+    // Products: public storefront read, admin-only write, and the
+    // document itself must be well-formed.
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, update: if isAdmin() && validProduct();
+      allow delete: if isAdmin();
     }
 
     // Offers: public storefront read (so prices/badges compute
     // correctly for anonymous shoppers), admin-only write.
     match /offers/{offerId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, update: if isAdmin() && validOffer();
+      allow delete: if isAdmin();
     }
 
     // Settings docs (shopGallery, business info): public read,
     // admin-only write.
+    //
+    // Fix (SEC-05, security audit 2026-09-18): this previously allowed
+    // any shape at all. The shopGallery document is an array of photo
+    // objects that the public Shop page renders into <img src>, and
+    // Firestore rules have no loop construct, so the CONTENTS of that
+    // array genuinely cannot be validated here — the per-entry URL check
+    // lives in src/context/ShopGalleryContext.jsx, which every consumer
+    // reads through. What the rules CAN do is bound the document, so a
+    // single write cannot push an arbitrarily large payload to every
+    // visitor of the storefront.
     match /settings/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin()
+        && (!('photos' in incoming())
+            || (incoming().photos is list && incoming().photos.size() <= 200));
     }
 
     // Everything else is denied by default — there is no catch-all

@@ -6,6 +6,11 @@ import { useCart } from '../../context/CartContext';
 import SearchBar from '../search/SearchBar';
 import './Navbar.css';
 
+/** "1 item" / "2 items" — used in the icon buttons' accessible labels. */
+function pluralizeItems(count) {
+  return `${count} ${count === 1 ? 'item' : 'items'}`;
+}
+
 /**
  * Translucent, blur-backed navbar. Solidifies slightly once the page is
  * scrolled so text stays legible over any hero content behind it.
@@ -59,11 +64,18 @@ export default function Navbar() {
         </div>
 
         <div className="navbar__actions">
-          <NavLink to={ROUTES.wishlist} className="navbar__icon-btn" aria-label={`Wishlist, ${wishlistIds.length} items`}>
+          {/* Fix (BUG-22): these read "Wishlist, 1 items" — screen readers
+              speak the label verbatim, so single-item states were
+              announced ungrammatically. */}
+          <NavLink
+            to={ROUTES.wishlist}
+            className="navbar__icon-btn"
+            aria-label={`Wishlist, ${pluralizeItems(wishlistIds.length)}`}
+          >
             <HeartIcon />
             {wishlistIds.length > 0 && <span className="navbar__badge">{wishlistIds.length}</span>}
           </NavLink>
-          <NavLink to={ROUTES.cart} className="navbar__icon-btn" aria-label={`Cart, ${totalItems} items`}>
+          <NavLink to={ROUTES.cart} className="navbar__icon-btn" aria-label={`Cart, ${pluralizeItems(totalItems)}`}>
             <BagIcon />
             {totalItems > 0 && <span className="navbar__badge">{totalItems}</span>}
           </NavLink>

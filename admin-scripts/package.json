@@ -5,9 +5,13 @@
   "description": "Trusted, locally-run setup scripts. NEVER deployed with the frontend app.",
   "scripts": {
     "set-admin-claim": "node setAdminClaim.js",
-    "seed": "node seedFirestore.js"
+    "seed": "node seedFirestore.js",
+    "revoke-admin-claim": "node revokeAdminClaim.js"
   },
   "dependencies": {
-    "firebase-admin": "^12.5.0"
+    "firebase-admin": "^14.4.0"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }

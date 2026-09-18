@@ -19,7 +19,8 @@
 .section-heading__link {
   flex-shrink: 0;
   font-weight: var(--fw-semibold);
-  color: var(--color-brand);
+  /* NEW-24: body-size link text needs the AA-safe brand tone. */
+  color: var(--color-brand-text);
   padding-bottom: var(--space-2);
   border-bottom: 2px solid transparent;
   transition: border-color var(--duration-fast);

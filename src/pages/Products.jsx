@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductFilters, { PRICE_RANGES } from '../components/product/ProductFilters';
 import ProductGrid from '../components/product/ProductGrid';
@@ -8,7 +8,7 @@ import { useProducts } from '../context/ProductsContext';
 import { useOffers } from '../context/OffersContext';
 import { getCategories } from '../utils/categories';
 import { searchProducts } from '../utils/search';
-import { getActiveOfferForProduct } from '../utils/pricing';
+import { getActiveOfferForProduct, getProductPricing } from '../utils/pricing';
 import { useDocumentHead } from '../hooks/useDocumentHead';
 
 function parsePriceRange(value) {
@@ -31,7 +31,7 @@ function isInPriceRange(price, range, isLastTier) {
 }
 
 export default function Products() {
-  const { products, error: productsError } = useProducts();
+  const { products, error: productsError, loading: productsLoading, retry: retryProducts } = useProducts();
   const { offers } = useOffers();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
@@ -48,9 +48,25 @@ export default function Products() {
   // directly from searchParams on every render (like `query` already
   // did) makes the URL the single source of truth, so this can't desync.
   const category = searchParams.get('category') || 'all';
-  const [offerOnly, setOfferOnly] = useState(false);
-  const [priceRange, setPriceRange] = useState('all');
-  const [sort, setSort] = useState('featured');
+
+  // Fix (NEW-10): price range, "On Offer" and sort used to be component
+  // state, so a shared or reloaded filtered link silently dropped them
+  // and Back/Forward didn't restore them — exactly the desync that was
+  // already fixed for `category` (see the note above). All four filters
+  // now read from the URL, which is the single source of truth.
+  const priceRange = searchParams.get('price') || 'all';
+  const sort = searchParams.get('sort') || 'featured';
+  const offerOnly = searchParams.get('offer') === '1';
+
+  const setParam = useCallback(
+    (key, value, defaultValue) => {
+      const next = new URLSearchParams(searchParams);
+      if (value === defaultValue) next.delete(key);
+      else next.set(key, value);
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
 
   useDocumentHead({
     title: query ? `Results for "${query}"` : 'Shop All Gifts',
@@ -60,36 +76,48 @@ export default function Products() {
 
   const categories = useMemo(() => getCategories(products), [products]);
 
+  // Fix (NEW-06): a category in the URL that no longer exists (a rename,
+  // a stale link, or just the wrong capitalisation — categories are
+  // matched exactly) produced "0 gifts found" while the dropdown still
+  // read "All Categories", so the customer saw an empty shop with no
+  // visible filter to clear. We now detect that and say so.
+  const categoryIsKnown = category === 'all' || categories.some((c) => c.name === category);
+  const effectiveCategory = categoryIsKnown ? category : 'all';
+
   const filtered = useMemo(() => {
     let list = query ? searchProducts(products, query, { limit: 100 }) : products.filter((p) => p.available);
 
-    if (category !== 'all') {
-      list = list.filter((p) => p.category === category);
+    if (effectiveCategory !== 'all') {
+      list = list.filter((p) => p.category === effectiveCategory);
     }
 
     if (offerOnly) {
       list = list.filter((p) => getActiveOfferForProduct(p, offers));
     }
 
+    // Fix (BUG-07): price filtering and sorting both used `p.price`, the
+    // ORIGINAL price, while the card showed the discounted one. With
+    // overlapping offers the catalogue visibly listed ₹119, ₹179, ₹269,
+    // ₹150 under "Price: Low to High" — the cheapest gift last. Both now
+    // use the same final price the customer actually sees and pays.
+    const priceOf = (p) => getProductPricing(p, offers).finalPrice;
+
     const range = parsePriceRange(priceRange);
     if (range) {
       const isLastTier = PRICE_RANGES[PRICE_RANGES.length - 1].value === priceRange;
-      list = list.filter((p) => isInPriceRange(p.price, range, isLastTier));
+      list = list.filter((p) => isInPriceRange(priceOf(p), range, isLastTier));
     }
 
     const sorted = [...list];
-    if (sort === 'price-asc') sorted.sort((a, b) => a.price - b.price);
-    else if (sort === 'price-desc') sorted.sort((a, b) => b.price - a.price);
+    if (sort === 'price-asc') sorted.sort((a, b) => priceOf(a) - priceOf(b));
+    else if (sort === 'price-desc') sorted.sort((a, b) => priceOf(b) - priceOf(a));
     else if (sort === 'name-asc') sorted.sort((a, b) => a.name.localeCompare(b.name));
 
     return sorted;
-  }, [products, offers, query, category, offerOnly, priceRange, sort]);
+  }, [products, offers, query, effectiveCategory, offerOnly, priceRange, sort]);
 
   function handleCategoryChange(value) {
-    const next = new URLSearchParams(searchParams);
-    if (value === 'all') next.delete('category');
-    else next.set('category', value);
-    setSearchParams(next, { replace: true });
+    setParam('category', value, 'all');
   }
 
   return (
@@ -97,18 +125,28 @@ export default function Products() {
       <div className="container">
         <h1>{query ? `Results for "${query}"` : 'Shop All Gifts'}</h1>
 
-        {productsError && <DataLoadError message="We're having trouble loading the gift catalogue." />}
+        {productsError && <DataLoadError
+            message="We're having trouble loading the gift catalogue."
+            onRetry={retryProducts}
+            retrying={productsLoading}
+          />}
+
+        {!categoryIsKnown && (
+          <p className="products-page__unknown-category" role="status">
+            We don’t have a category called “{category}” any more, so we’re showing everything instead.
+          </p>
+        )}
 
         <ProductFilters
           categories={categories}
-          category={category}
+          category={effectiveCategory}
           onCategoryChange={handleCategoryChange}
           offerOnly={offerOnly}
-          onOfferOnlyChange={setOfferOnly}
+          onOfferOnlyChange={(v) => setParam('offer', v ? '1' : '0', '0')}
           priceRange={priceRange}
-          onPriceRangeChange={setPriceRange}
+          onPriceRangeChange={(v) => setParam('price', v, 'all')}
           sort={sort}
-          onSortChange={setSort}
+          onSortChange={(v) => setParam('sort', v, 'featured')}
           resultCount={filtered.length}
         />
 
@@ -120,11 +158,7 @@ export default function Products() {
               title="No gifts match your search"
               description="Try a different keyword, or clear your filters to see everything we have."
               actionLabel="Clear Filters"
-              onAction={() => {
-                setOfferOnly(false);
-                setPriceRange('all');
-                setSearchParams({}, { replace: true });
-              }}
+              onAction={() => setSearchParams({}, { replace: true })}
             />
           )
         )}

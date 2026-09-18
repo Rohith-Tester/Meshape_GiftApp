@@ -7,13 +7,25 @@ import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/currency';
 import { ROUTES } from '../config/routes';
 import { useDocumentHead } from '../hooks/useDocumentHead';
+import { useCartLines, summarizeCartLines, describeLineChange } from '../hooks/useCartLines';
 import './Cart.css';
 
 export default function Cart() {
   useDocumentHead({ title: 'Your Cart', description: 'Review the gifts in your cart.', noindex: true });
 
-  const { items, updateQuantity, removeItem, subtotal, totalItems } = useCart();
+  const { items, updateQuantity, removeItem, removeLines, repriceLine } = useCart();
+  const lines = useCartLines();
+  const { changed, unbuyable, needsReview, subtotal, totalItems } = summarizeCartLines(lines);
   const navigate = useNavigate();
+
+  // Fix (BUG-04 / NEW-02 / NEW-03): nothing can be ordered until the
+  // customer has seen and accepted whatever changed in the catalogue.
+  // Accepting drops what can no longer be bought and adopts today's
+  // price for anything that was repriced.
+  function acceptChanges() {
+    if (unbuyable.length > 0) removeLines(unbuyable.map((l) => l.lineId));
+    lines.filter((l) => l.status === 'repriced').forEach((l) => repriceLine(l.lineId, l.pricing));
+  }
 
   // Same technique as ProductDetail/Order: adds a class only while this
   // page is open, so the fixed Proceed to Order button (see Cart.css)
@@ -44,8 +56,31 @@ export default function Cart() {
       <div className="container cart-page__grid">
         <div className="cart-page__items">
           <h1>Your Cart</h1>
-          {items.map((line) => (
-            <CartItemRow key={line.lineId} line={line} onUpdateQuantity={updateQuantity} onRemove={removeItem} />
+
+          {needsReview && (
+            <div className="cart-page__notice" role="alert">
+              <p className="cart-page__notice-title">Some gifts in your cart have changed</p>
+              <ul className="cart-page__notice-list">
+                {changed.map((line) => (
+                  <li key={line.lineId}>
+                    <strong>{line.name}</strong> {describeLineChange(line)}
+                  </li>
+                ))}
+              </ul>
+              <button type="button" className="cart-page__notice-btn" onClick={acceptChanges}>
+                {unbuyable.length > 0 ? 'Update my cart' : 'Accept the new prices'}
+              </button>
+            </div>
+          )}
+
+          {lines.map((line) => (
+            <CartItemRow
+              key={line.lineId}
+              line={line}
+              onUpdateQuantity={updateQuantity}
+              onRemove={removeItem}
+              onAcceptPrice={() => repriceLine(line.lineId, line.pricing)}
+            />
           ))}
           <Link to={ROUTES.products} className="cart-page__continue">
             ← Continue Shopping
@@ -63,9 +98,20 @@ export default function Cart() {
             <span>Total</span>
             <span>{formatINR(subtotal)}</span>
           </div>
-          <Button variant="primary" size="lg" className="cart-summary__checkout" onClick={() => navigate(ROUTES.order)}>
+          <Button
+            variant="primary"
+            size="lg"
+            className="cart-summary__checkout"
+            onClick={() => navigate(ROUTES.order)}
+            disabled={needsReview || totalItems === 0}
+          >
             Proceed to Order
           </Button>
+          {needsReview && (
+            <p className="cart-summary__blocked" role="status">
+              Resolve the changes above before placing your order.
+            </p>
+          )}
         </aside>
       </div>
     </div>

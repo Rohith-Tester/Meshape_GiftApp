@@ -1,3 +1,5 @@
+import { getPrimaryImage } from './productImage';
+
 /**
  * Categories are never maintained as a separate hardcoded list — they are
  * derived from whatever products actually exist, so adding a product in a
@@ -11,7 +13,7 @@ export function getCategories(products) {
     if (!map.has(product.category)) {
       map.set(product.category, {
         name: product.category,
-        image: product.images[0],
+        image: getPrimaryImage(product),
         count: 0,
       });
     }

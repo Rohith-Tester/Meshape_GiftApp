@@ -25,13 +25,29 @@
   }
 }
 
+/*
+  Expanding halo for the floating WhatsApp button.
+
+  This used to animate `box-shadow` from a 0px to a 6px spread. Shadow
+  geometry is not a compositable property, so every frame forced a fresh
+  paint — on an animation set to `infinite`, on a `position: fixed`
+  element that is on screen on every page of the site. It was a standing
+  repaint for the entire time anyone had the site open, and it showed up
+  as rendering and style/layout time in the Lighthouse main-thread
+  breakdown (NEW-23).
+
+  `transform` and `opacity` produce the same visual effect and are both
+  handled by the compositor, so the main thread does no work per frame.
+*/
 @keyframes ribbon-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(185, 139, 78, 0.35);
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
   }
-  50% {
-    box-shadow: 0 0 0 6px rgba(185, 139, 78, 0);
+  70%,
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
   }
 }
 

@@ -54,6 +54,13 @@ export default function OrderReviewSummary({ items, subtotal, fulfillment, form 
               .join(', ') || '—'}
           </p>
         )}
+        {/* Fix (BUG-03): show the instructions back to the customer, so
+            it is visible that they will be sent rather than dropped. */}
+        {fulfillment === FULFILLMENT_METHODS.delivery && form.instructions?.trim() && (
+          <p className="order-review__instructions">
+            <strong>Instructions:</strong> {form.instructions.trim()}
+          </p>
+        )}
       </div>
     </div>
   );

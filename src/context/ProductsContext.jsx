@@ -1,14 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import {
-  collection,
-  onSnapshot,
-  doc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { loadFirestore } from '../lib/firebase';
+import { fetchCollectionOnce } from '../lib/firestoreRest';
 
 const ProductsContext = createContext(null);
 const COLLECTION = 'products';
@@ -44,25 +36,78 @@ export function ProductsProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Fix (BUG-17): bumping this re-runs the effect below, which
+  // tears down the failed listener and subscribes again — giving
+  // DataLoadError a genuine retry instead of only telling the
+  // customer to reload the whole page themselves.
+  const [retryToken, setRetryToken] = useState(0);
 
+  const retry = useCallback(() => {
+    setError(null);
+    setLoading(true);
+    setRetryToken((n) => n + 1);
+  }, []);
+
+  // The Firestore SDK is fetched here rather than imported at the top of
+  // the file (NEW-23), so it downloads alongside the first paint instead
+  // of blocking it. `cancelled` covers the window where the component
+  // unmounts — or retry() re-runs this effect — while the import is
+  // still in flight, which would otherwise leak a live listener.
   useEffect(() => {
-    const unsubscribe = onSnapshot(
-      collection(db, COLLECTION),
-      (snapshot) => {
-        setProducts(snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })));
+    let cancelled = false;
+    let unsubscribe = null;
+    // Set as soon as the SDK delivers a snapshot. The REST read below is
+    // only a head start; once the SDK is live it owns the data, and a
+    // slower REST response must never overwrite it.
+    let sdkHasDelivered = false;
+    const restAbort = new AbortController();
+
+    // A plain HTTPS read that needs no SDK, so it can go out while the
+    // SDK chunk is still downloading — this is what lets the first
+    // product photos start loading about a second earlier (NEW-23).
+    // A failure here is not an error state: the SDK is still coming.
+    fetchCollectionOnce(COLLECTION, { signal: restAbort.signal })
+      .then((docs) => {
+        if (cancelled || sdkHasDelivered) return;
+        setProducts(docs);
         setLoading(false);
-        setError(null);
-      },
-      (err) => {
-        // Common cause: firestore.rules not yet deployed, or Firebase
-        // env vars missing/misconfigured. Surfaced to the UI rather than
-        // failing silently — see EmptyState usage in Products.jsx/Home.jsx.
+      })
+      .catch(() => {
+        /* Ignored by design — see src/lib/firestoreRest.js. */
+      });
+
+    loadFirestore()
+      .then(({ db, fs }) => {
+        if (cancelled) return;
+        unsubscribe = fs.onSnapshot(
+          fs.collection(db, COLLECTION),
+          (snapshot) => {
+            sdkHasDelivered = true;
+            setProducts(snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })));
+            setLoading(false);
+            setError(null);
+          },
+          (err) => {
+            // Common cause: firestore.rules not yet deployed, or Firebase
+            // env vars missing/misconfigured. Surfaced to the UI rather than
+            // failing silently — see EmptyState usage in Products.jsx/Home.jsx.
+            setError(err.message);
+            setLoading(false);
+          }
+        );
+      })
+      .catch((err) => {
+        if (cancelled) return;
         setError(err.message);
         setLoading(false);
-      }
-    );
-    return unsubscribe;
-  }, []);
+      });
+
+    return () => {
+      cancelled = true;
+      restAbort.abort();
+      if (unsubscribe) unsubscribe();
+    };
+  }, [retryToken]);
 
   const getProductById = useCallback((id) => products.find((p) => p.id === id) || null, [products]);
 
@@ -74,10 +119,11 @@ export function ProductsProvider({ children }) {
         id = `${slugify(data.name)}-${suffix}`;
         suffix += 1;
       }
-      await setDoc(doc(db, COLLECTION, id), {
+      const { db, fs } = await loadFirestore();
+      await fs.setDoc(fs.doc(db, COLLECTION, id), {
         ...data,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: fs.serverTimestamp(),
+        updatedAt: fs.serverTimestamp(),
       });
       return id;
     },
@@ -85,16 +131,18 @@ export function ProductsProvider({ children }) {
   );
 
   const updateProduct = useCallback(async (id, updates) => {
-    await updateDoc(doc(db, COLLECTION, id), { ...updates, updatedAt: serverTimestamp() });
+    const { db, fs } = await loadFirestore();
+    await fs.updateDoc(fs.doc(db, COLLECTION, id), { ...updates, updatedAt: fs.serverTimestamp() });
   }, []);
 
   const deleteProduct = useCallback(async (id) => {
-    await deleteDoc(doc(db, COLLECTION, id));
+    const { db, fs } = await loadFirestore();
+    await fs.deleteDoc(fs.doc(db, COLLECTION, id));
   }, []);
 
   const value = useMemo(
-    () => ({ products, loading, error, getProductById, addProduct, updateProduct, deleteProduct }),
-    [products, loading, error, getProductById, addProduct, updateProduct, deleteProduct]
+    () => ({ products, loading, error, retry, getProductById, addProduct, updateProduct, deleteProduct }),
+    [products, loading, error, retry, getProductById, addProduct, updateProduct, deleteProduct]
   );
 
   return <ProductsContext.Provider value={value}>{children}</ProductsContext.Provider>;

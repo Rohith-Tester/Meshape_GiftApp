@@ -47,9 +47,46 @@ export default function ImageManagerField({ images, onChange, onUploadingChange 
     }
   }
 
+  /**
+   * Fix (NEW-07): this accepted ANY string with no validation at all,
+   * so pasting a URL bypassed every rule that validateImageFile applies
+   * to uploads — the JPG/PNG/WEBP restriction and the 5MB ceiling — and
+   * a typo silently became a permanently broken product image with no
+   * feedback. We now require a real http(s) URL that points at an
+   * allowed image type (or at Cloudinary, whose delivery URLs carry
+   * transformations rather than a plain extension).
+   */
   function handleAddUrl() {
-    if (!urlInput.trim()) return;
-    onChange([...images, urlInput.trim()]);
+    const raw = urlInput.trim();
+    if (!raw) return;
+
+    let parsed;
+    try {
+      parsed = new URL(raw);
+    } catch {
+      setError('Enter a full image URL, starting with https://');
+      return;
+    }
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      setError('Enter a full image URL, starting with https://');
+      return;
+    }
+
+    const path = parsed.pathname.toLowerCase();
+    const looksLikeImage = ['.jpg', '.jpeg', '.png', '.webp'].some((ext) => path.endsWith(ext));
+    const isCloudinary = parsed.hostname === 'res.cloudinary.com';
+    if (!looksLikeImage && !isCloudinary) {
+      setError('The link must point to a JPG, PNG, or WEBP image.');
+      return;
+    }
+
+    if (images.includes(raw)) {
+      setError('That image is already on this product.');
+      return;
+    }
+
+    setError('');
+    onChange([...images, raw]);
     setUrlInput('');
   }
 
@@ -69,8 +106,11 @@ export default function ImageManagerField({ images, onChange, onUploadingChange 
     <div className="image-manager">
       {images.length > 0 && (
         <div className="image-manager__grid">
+          {/* Fix (NEW-14): keyed by index on a list whose whole purpose
+              is reordering and removal, which made React reuse the wrong
+              nodes when images moved. The URL is the stable identity. */}
           {images.map((src, index) => (
-            <div className="image-manager__item" key={index}>
+            <div className="image-manager__item" key={src}>
               <img src={getOptimizedImageUrl(src, { width: 240 })} alt={`Image ${index + 1}`} />
               <div className="image-manager__item-controls">
                 <button type="button" onClick={() => handleMove(index, -1)} disabled={index === 0} aria-label="Move earlier">

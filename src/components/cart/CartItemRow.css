@@ -139,3 +139,25 @@
     text-align: right;
   }
 }
+
+/* Reconciliation states (BUG-04 / NEW-02 / NEW-03). */
+.cart-item--unsellable {
+  opacity: 0.62;
+}
+
+.cart-item__reprice,
+.cart-item__unsellable-note {
+  margin: var(--space-2, 8px) 0 0;
+  font-size: 0.85rem;
+  color: var(--color-rose-600, #c2185b);
+}
+
+.cart-item__reprice-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

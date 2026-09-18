@@ -11,7 +11,7 @@ import './OrderConfirmation.css';
  * them directly in this same WhatsApp chat — it's never collected on
  * the website.
  */
-export default function OrderConfirmation({ orderId, message, whatsappLink, onStartNewOrder }) {
+export default function OrderConfirmation({ orderId, message, whatsappLink, onStartNewOrder, onSent, sent }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -31,7 +31,7 @@ export default function OrderConfirmation({ orderId, message, whatsappLink, onSt
       <p className="order-confirmation__id">{orderId}</p>
 
       <p className="order-confirmation__instructions">
-        Review the message below, then open WhatsApp and press <strong>Send</strong> yourself — we don't send
+        Review the message below, then open WhatsApp and press <strong>Send</strong> yourself — we don’t send
         anything on your behalf.
       </p>
 
@@ -47,10 +47,30 @@ export default function OrderConfirmation({ orderId, message, whatsappLink, onSt
         <button type="button" className="order-confirmation__copy" onClick={handleCopy}>
           {copied ? 'Copied ✓' : 'Copy Message'}
         </button>
-        <a href={whatsappLink} target="_blank" rel="noreferrer" className="order-confirmation__send">
-          Open WhatsApp to Send
+        {/* Fix (BUG-02): opening WhatsApp is the moment the order leaves
+            the site, so that is when the cart is emptied. Previously
+            nothing cleared it here and the only thing that ever did was
+            the customer voluntarily pressing "Start a New Order", so a
+            sent order sat in the cart ready to be placed a second time.
+            The message and Order ID stay on screen afterwards so the
+            link can be reopened if WhatsApp didn't come up. */}
+        <a
+          href={whatsappLink}
+          target="_blank"
+          rel="noreferrer"
+          className="order-confirmation__send"
+          onClick={onSent}
+        >
+          {sent ? 'Reopen WhatsApp' : 'Open WhatsApp to Send'}
         </a>
       </div>
+
+      {sent && (
+        <p className="order-confirmation__sent-note" role="status">
+          Your cart has been emptied. Keep Order ID <strong>{orderId}</strong> handy — the shop will confirm
+          your order and any delivery charge on WhatsApp.
+        </p>
+      )}
 
       <button type="button" className="order-confirmation__new-order" onClick={onStartNewOrder}>
         Start a New Order

@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import CustomizationModal from '../components/product/CustomizationModal';
 import { useProducts } from '../context/ProductsContext';
 import { useOffers } from '../context/OffersContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -6,6 +8,7 @@ import { useCart } from '../context/CartContext';
 import { getProductPricing } from '../utils/pricing';
 import { formatINR } from '../utils/currency';
 import { getOptimizedImageUrl } from '../utils/cloudinaryImage';
+import { getPrimaryImage } from '../utils/productImage';
 import EmptyState from '../components/ui/EmptyState';
 import DataLoadError from '../components/ui/DataLoadError';
 import { ROUTES } from '../config/routes';
@@ -23,15 +26,39 @@ export default function Wishlist() {
   const { offers } = useOffers();
   const { wishlistIds, removeFromWishlist } = useWishlist();
   const { addItem } = useCart();
+  // Holds the product whose personalization is being collected.
+  const [pendingProduct, setPendingProduct] = useState(null);
 
   const wishlistProducts = wishlistIds
     .map((id) => products.find((p) => p.id === id))
     .filter(Boolean);
 
-  function handleMoveToCart(product) {
+  function completeMoveToCart(product, customization) {
     const pricing = getProductPricing(product, offers);
-    addItem(product, pricing, 1, null);
+    addItem(product, pricing, 1, customization);
     removeFromWishlist(product.id);
+  }
+
+  /**
+   * Fix (NEW-01): this used to call addItem(..., null) unconditionally,
+   * so moving a CUSTOMIZABLE gift from the wishlist skipped the
+   * personalization step entirely — the customer was never asked for a
+   * name or message, and the shop received an order for a personalized
+   * gift with no personalization on it. The product page always asked;
+   * the wishlist never did. Now both go through the same modal.
+   */
+  function handleMoveToCart(product) {
+    if (product.customizable) {
+      setPendingProduct(product);
+      return;
+    }
+    completeMoveToCart(product, null);
+  }
+
+  function handleModalConfirm(customization) {
+    const product = pendingProduct;
+    setPendingProduct(null);
+    if (product) completeMoveToCart(product, customization);
   }
 
   // Phase 10 QA fix: previously, if the product catalogue failed to
@@ -75,7 +102,7 @@ export default function Wishlist() {
             return (
               <div className="wishlist-item" key={product.id}>
                 <Link to={ROUTES.productDetailPath(product.id)} className="wishlist-item__media">
-                  <img src={getOptimizedImageUrl(product.images[0], { width: 200 })} alt={product.name} />
+                  <img src={getOptimizedImageUrl(getPrimaryImage(product), { width: 200 })} alt={product.name} />
                 </Link>
                 <div className="wishlist-item__info">
                   <Link to={ROUTES.productDetailPath(product.id)} className="wishlist-item__name">
@@ -90,9 +117,16 @@ export default function Wishlist() {
                   </div>
                 </div>
                 <div className="wishlist-item__actions">
-                  <button type="button" className="wishlist-item__move" onClick={() => handleMoveToCart(product)}>
-                    Move to Cart
-                  </button>
+                  {/* Fix (NEW-03): an unavailable product stayed in the
+                      wishlist with a working Move to Cart, which was a
+                      second way to order something taken off sale. */}
+                  {product.available === false ? (
+                    <span className="wishlist-item__unavailable">Currently unavailable</span>
+                  ) : (
+                    <button type="button" className="wishlist-item__move" onClick={() => handleMoveToCart(product)}>
+                      Move to Cart
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="wishlist-item__remove"
@@ -107,6 +141,14 @@ export default function Wishlist() {
           })}
         </div>
       </div>
+
+      {pendingProduct && (
+        <CustomizationModal
+          productName={pendingProduct.name}
+          onClose={() => setPendingProduct(null)}
+          onConfirm={handleModalConfirm}
+        />
+      )}
     </div>
   );
 }

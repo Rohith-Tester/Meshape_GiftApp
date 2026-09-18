@@ -24,6 +24,10 @@
   inset: -6px;
   border-radius: 50%;
   border: 2px solid rgba(37, 211, 102, 0.55);
+  /* ribbon-glow now animates transform/opacity rather than box-shadow
+     (see styles/animations.css). will-change promotes the ring to its
+     own compositor layer so those frames never touch the main thread. */
+  will-change: transform, opacity;
   animation: ribbon-glow 2.6s ease-out infinite;
 }
 

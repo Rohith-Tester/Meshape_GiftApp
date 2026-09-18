@@ -1,4 +1,11 @@
 .footer {
+  /* Always below the fold on first paint — same reasoning as `.section`
+     in styles/global.css (NEW-23). */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 520px;
+}
+
+.footer {
   background: var(--color-plum-950);
   color: var(--color-text-on-dark);
   margin-top: var(--space-10);

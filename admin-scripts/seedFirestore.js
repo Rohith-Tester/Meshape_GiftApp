@@ -20,7 +20,12 @@
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import admin from 'firebase-admin';
+// Security audit 2026-09-18 (SEC-06): migrated to firebase-admin v14's
+// modular entry points — v14 is the release that drops the vulnerable
+// `uuid` transitive dependency, and it removes the old `admin.*`
+// namespaced API this script previously used.
+import { initializeApp, cert } from 'firebase-admin/app';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { products } from '../src/data/products.js';
 import { offers } from '../src/data/offers.js';
 import { shopGallery } from '../src/data/shopGallery.js';
@@ -28,11 +33,11 @@ import { shopGallery } from '../src/data/shopGallery.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const serviceAccount = JSON.parse(readFileSync(join(__dirname, 'service-account-key.json'), 'utf8'));
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+const app = initializeApp({
+  credential: cert(serviceAccount),
 });
 
-const db = admin.firestore();
+const db = getFirestore(app);
 
 async function seed() {
   const batch = db.batch();
@@ -41,8 +46,8 @@ async function seed() {
     const { id, ...data } = product;
     batch.set(db.collection('products').doc(id), {
       ...data,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
   }
 

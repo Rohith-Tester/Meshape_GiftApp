@@ -1,24 +1,34 @@
 import { useEffect } from 'react';
 import { getOptimizedImageUrl } from '../../utils/cloudinaryImage';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import './ImageLightbox.css';
 
 export default function ImageLightbox({ images, index, onClose, onNavigate }) {
   const image = images[index];
+  // Escape, background scroll lock (BUG-11) and the focus trap (BUG-12).
+  const dialogRef = useModalBehavior({ onClose });
 
   useEffect(() => {
     function handleKeyDown(e) {
-      if (e.key === 'Escape') onClose();
       if (e.key === 'ArrowRight') onNavigate((index + 1) % images.length);
       if (e.key === 'ArrowLeft') onNavigate((index - 1 + images.length) % images.length);
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [index, images.length, onClose, onNavigate]);
+  }, [index, images.length, onNavigate]);
 
   if (!image) return null;
 
   return (
-    <div className="lightbox" role="dialog" aria-modal="true" aria-label={image.alt} onMouseDown={onClose}>
+    <div
+      className="lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label={image.alt}
+      onMouseDown={onClose}
+      ref={dialogRef}
+      tabIndex={-1}
+    >
       <button type="button" className="lightbox__close" onClick={onClose} aria-label="Close">
         ×
       </button>

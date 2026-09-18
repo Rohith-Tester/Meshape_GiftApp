@@ -44,6 +44,16 @@ export function buildWhatsAppMessage({ orderId, fulfillment, form, items, subtot
   lines.push(`Name: ${form.name}`);
   lines.push(`Mobile: ${form.mobile}`);
   lines.push(isDelivery ? `Address: ${formatDeliveryAddress(form)}` : `Pickup from: ${business.address.full}`);
+
+  // Fix (BUG-03): the delivery form collects "Additional Instructions"
+  // (gate codes, landmarks, timing notes) but this message never
+  // included it, so everything the customer typed there was silently
+  // thrown away and the shop never saw it.
+  const instructions = (form.instructions || '').trim();
+  if (instructions) {
+    lines.push(`Instructions: ${instructions}`);
+  }
+
   lines.push('');
   lines.push('Items:');
   items.forEach((line, index) => {

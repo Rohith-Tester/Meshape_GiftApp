@@ -35,8 +35,21 @@
   --color-plum-700: #4c1740;
   --color-raspberry-700: #9e2646;
   --color-raspberry-500: #c7375a;
+  /* Fix (NEW-24): the brand raspberry and gold are gorgeous, but at
+     16px on our light surfaces they measure 4.36:1 and 3.74:1 —
+     under the 4.5:1 WCAG AA minimum for normal-size text. These are
+     a touch darker so SMALL TEXT clears AA; the originals stay in
+     use for headings, badges and decoration, where the large-text
+     threshold (3:1) already applies. */
+  --color-raspberry-600-text: #bf3556; /* 4.66:1 on --color-blush-50 */
   --color-raspberry-300: #e07a95;
-  --color-gold-600: #a17538;
+  /* Fix (NEW-24): was #a17538, which measures 4.10:1 on white and
+     3.74:1 on the navbar — under the 4.5:1 WCAG AA minimum for
+     normal-size text. It is used as text in 17 places, all on light
+     surfaces, so darkening the token fixes them all at once; the
+     only non-text use is a decorative SVG fill in the hero. */
+  --color-gold-600: #8e6731;
+  --color-gold-600-bright: #a17538; /* original tone, for non-text use */
   --color-gold-500: #b98b4e;
   --color-gold-200: #e8d3ac;
   --color-blush-100: #f6d9ce;
@@ -54,6 +67,8 @@
   --color-text-on-dark-muted: #d9c3d3;
   --color-brand: var(--color-raspberry-500);
   --color-brand-hover: var(--color-raspberry-700);
+  /* Use this instead of --color-brand for body-size link text. */
+  --color-brand-text: var(--color-raspberry-600-text);
   --color-accent: var(--color-gold-500);
   --color-border: #ecdcd6;
   --color-border-dark: rgba(251, 243, 238, 0.16);
@@ -133,8 +148,15 @@
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
+    /* Delays were not being reset, so an element that starts at
+       `opacity: 0` and reveals itself on an animation — every item in
+       the hero's entrance stagger — stayed invisible for its full delay
+       even for someone who asked for no motion at all. Zeroing the
+       delay is what actually makes the content appear at once. */
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 }

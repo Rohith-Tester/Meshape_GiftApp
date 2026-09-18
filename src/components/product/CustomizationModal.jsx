@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import './CustomizationModal.css';
 
 /**
@@ -13,16 +14,9 @@ import './CustomizationModal.css';
 export default function CustomizationModal({ productName, onClose, onConfirm }) {
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
-  const dialogRef = useRef(null);
-
-  useEffect(() => {
-    function onKeyDown(e) {
-      if (e.key === 'Escape') onClose();
-    }
-    document.addEventListener('keydown', onKeyDown);
-    dialogRef.current?.focus();
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  // Escape, background scroll lock (BUG-11) and the focus trap (BUG-12)
+  // all come from the shared dialog hook.
+  const dialogRef = useModalBehavior({ onClose });
 
   function handleSubmit(e) {
     e.preventDefault();

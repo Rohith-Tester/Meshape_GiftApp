@@ -4,17 +4,36 @@ import { ROUTES } from '../../config/routes';
 import { formatINR } from '../../utils/currency';
 import { getProductPricing } from '../../utils/pricing';
 import { getOptimizedImageUrl } from '../../utils/cloudinaryImage';
+import { getPrimaryImage } from '../../utils/productImage';
+import { safeExternalUrl } from '../../utils/safeUrl';
 import { useOffers } from '../../context/OffersContext';
 import { useWishlist } from '../../context/WishlistContext';
 import './ProductCard.css';
 
-export default function ProductCard({ product }) {
+/**
+ * `priority` marks a card that is above the fold on first paint.
+ *
+ * Every card image used to be `loading="lazy"`, including the ones
+ * already in the viewport. A lazy image is not requested until the
+ * browser has done layout and decided it is near the viewport, which on
+ * the catalogue page made the very first product photo — the Largest
+ * Contentful Paint element — wait an extra ~1.2s that it did not need
+ * to ("LCP resources should not use loading=lazy", NEW-23). Lazy
+ * loading is still exactly right for the rest of the grid, so it stays
+ * the default and only the first row opts out.
+ */
+export default function ProductCard({ product, priority = false }) {
   const navigate = useNavigate();
   const { offers } = useOffers();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const [justToggled, setJustToggled] = useState(false);
   const pricing = getProductPricing(product, offers);
   const wishlisted = isWishlisted(product.id);
+  // Security audit 2026-09-18 (SEC-04): this href comes from a Firestore
+  // document, and React does not sanitize href — a stored `javascript:`
+  // value would render as a working script link. safeExternalUrl returns
+  // null for anything that isn't http(s), which hides the icon entirely.
+  const instagramUrl = safeExternalUrl(product.instagramUrl);
 
   function handleWishlistClick(e) {
     e.preventDefault();
@@ -26,8 +45,21 @@ export default function ProductCard({ product }) {
 
   return (
     <article className="product-card">
-      <Link to={ROUTES.productDetailPath(product.id)} className="product-card__media">
-        <img src={getOptimizedImageUrl(product.images[0], { width: 500 })} alt={product.name} loading="lazy" />
+      {/* Fix (NEW-12): the wishlist button used to sit INSIDE this link.
+          A <button> nested in an <a> is invalid HTML — it only worked
+          because of preventDefault, and assistive technology may not
+          expose the button at all. The button is now a sibling,
+          positioned over the image by the existing CSS. */}
+      <div className="product-card__media">
+        <Link to={ROUTES.productDetailPath(product.id)} className="product-card__media-link">
+          <img
+            src={getOptimizedImageUrl(getPrimaryImage(product), { width: 400 })}
+            alt={product.name}
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : undefined}
+            decoding={priority ? 'sync' : 'async'}
+          />
+        </Link>
         {pricing.hasOffer && <span className="product-card__badge">{pricing.discountPercent}% OFF</span>}
         {product.size && <span className="product-card__size-badge">{product.size}</span>}
         <button
@@ -41,14 +73,14 @@ export default function ProductCard({ product }) {
         >
           <HeartIcon filled={wishlisted} />
         </button>
-      </Link>
+      </div>
 
       <div className="product-card__body">
         <div className="product-card__category-row">
           <p className="product-card__category">{product.category}</p>
-          {product.instagramUrl && (
+          {instagramUrl && (
             <a
-              href={product.instagramUrl}
+              href={instagramUrl}
               target="_blank"
               rel="noreferrer"
               className="product-card__instagram"

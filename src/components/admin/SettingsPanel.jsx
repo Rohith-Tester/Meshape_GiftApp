@@ -9,7 +9,7 @@ export default function SettingsPanel() {
         Business settings (address, hours, contact numbers) are intentionally kept in{' '}
         <code>src/config/business.js</code> rather than Firestore — unlike products/offers/gallery, this
         information changes rarely, and keeping it in code avoids an extra database round-trip on every page for
-        data that isn't dynamic. To change it, edit that file and redeploy. See PROJECT_REQUIREMENTS.md for the
+        data that isn’t dynamic. To change it, edit that file and redeploy. See PROJECT_REQUIREMENTS.md for the
         full reasoning.
       </p>
 

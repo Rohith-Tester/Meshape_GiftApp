@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductsContext';
 import { searchProducts } from '../../utils/search';
 import { getOptimizedImageUrl } from '../../utils/cloudinaryImage';
+import { getPrimaryImage } from '../../utils/productImage';
 import { ROUTES } from '../../config/routes';
 import './SearchBar.css';
 
@@ -93,13 +94,21 @@ export default function SearchBar({ variant = 'inline', onNavigate }) {
           {suggestions.length === 0 && <li className="search-bar__empty">No gifts match “{query}”</li>}
           {suggestions.map((product, index) => (
             <li key={product.id} role="option" aria-selected={index === activeIndex}>
+              {/* Fix (NEW-09): this was onMouseDown only, which keyboard
+                  activation never fires — tabbing to a suggestion and
+                  pressing Enter or Space did nothing at all. onClick
+                  handles mouse, keyboard and touch alike; the
+                  preventDefault on mousedown stops the input blurring
+                  and closing the list before the click lands. */}
               <button
                 type="button"
                 className={`search-bar__suggestion ${index === activeIndex ? 'search-bar__suggestion--active' : ''}`}
-                onMouseDown={() => goToProduct(product)}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => goToProduct(product)}
+                onFocus={() => setActiveIndex(index)}
                 onMouseEnter={() => setActiveIndex(index)}
               >
-                <img src={getOptimizedImageUrl(product.images[0], { width: 80 })} alt="" className="search-bar__thumb" />
+                <img src={getOptimizedImageUrl(getPrimaryImage(product), { width: 80 })} alt="" className="search-bar__thumb" />
                 <span>
                   <span className="search-bar__name">{product.name}</span>
                   <span className="search-bar__category">{product.category}</span>
@@ -109,7 +118,12 @@ export default function SearchBar({ variant = 'inline', onNavigate }) {
           ))}
           {suggestions.length > 0 && (
             <li>
-              <button type="button" className="search-bar__view-all" onMouseDown={goToSearchResults}>
+              <button
+                type="button"
+                className="search-bar__view-all"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={goToSearchResults}
+              >
                 See all results for “{query}”
               </button>
             </li>

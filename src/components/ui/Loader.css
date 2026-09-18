@@ -13,8 +13,10 @@
      FADE_OUT_DURATION_MS constant — Loader.jsx times its own unmount off
      both of these so the fade is allowed to finish playing before React
      removes this element. See the Phase 10 QA comment there. */
-  animation: loader-fade-out var(--duration-slow) var(--ease-standard) forwards;
-  animation-delay: 900ms;
+  /* NEW-05: the fade is triggered by the .loader--leaving class once
+     the catalogue is actually ready, rather than by a blind
+     animation-delay that ran regardless of load state. */
+  transition: opacity var(--duration-slow) var(--ease-standard);
 }
 
 .loader__mark {
@@ -42,4 +44,10 @@
   font-size: var(--fs-400);
   letter-spacing: 0.02em;
   margin: 0;
+}
+
+.loader--leaving {
+  opacity: 0;
+  /* Stop swallowing clicks the instant the fade begins. */
+  pointer-events: none;
 }

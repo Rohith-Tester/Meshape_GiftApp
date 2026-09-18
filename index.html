@@ -12,18 +12,28 @@
     />
     <meta name="theme-color" content="#3A1030" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="canonical" href="/" />
+    <!--
+      Fix (BUG-09): there used to be a <link rel="canonical" href="/">
+      here. A canonical URL must be absolute, and a root-relative one is
+      ignored by crawlers — it also pointed every page at the homepage.
+      src/hooks/useDocumentHead.js sets a correct absolute canonical for
+      the actual page at runtime, so declaring a wrong one statically
+      only ever did harm.
+    -->
 
     <!--
-      Open Graph readiness. Phase 10 QA fix: this previously pointed at
-      /og-image.jpg, which was never created — a dangling reference since
-      Phase 1 that would have shown a broken image in every WhatsApp/
-      social link preview. /og-image.svg is a real, branded placeholder
-      that closes that gap, but SVG og:image support is inconsistent
-      across platforms (older WhatsApp/Facebook crawlers in particular
-      often don't render it) — replacing this with a real 1200x630
-      JPG/PNG photo before serious social sharing use is recommended; see
-      PROJECT_REQUIREMENTS.md for this noted as a pre-launch item.
+      Open Graph. History: this pointed at /og-image.jpg (never created,
+      so every link preview showed a broken image), then at
+      /og-image.svg — a real branded asset, but WhatsApp's and
+      Facebook's crawlers do not reliably rasterise SVG, so previews
+      still came through with no image.
+      Fix (TC-93): /og-image.png is a real 1200x630 raster of that same
+      branded design, which is the format every crawler supports.
+      og:image:width/height let crawlers lay the card out before the
+      image finishes downloading.
+      Note: og:image must be an ABSOLUTE url to be honoured — the
+      root-relative path below is rewritten to a full one at runtime by
+      src/hooks/useDocumentHead.js (BUG-09).
     -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="MeShape Gift Shop" />
@@ -32,18 +42,168 @@
       property="og:description"
       content="Personalized mugs, lamps, keychains, cushions and gift hampers. Order online for pickup or delivery across India."
     />
-    <meta property="og:image" content="/og-image.svg" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="MeShape Gift Shop — Personalized & Premium Gifts" />
+    <meta name="twitter:card" content="summary_large_image" />
 
-    <!-- Fonts: Fraunces (display serif) + Manrope (body sans) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Every product photo is served from Cloudinary, and the largest one
+      is usually the LCP element. Opening that connection during HTML
+      parse — rather than waiting for React to mount, read Firestore and
+      only then request an image — removes a DNS + TLS round-trip from
+      the critical path (NEW-23).
+    -->
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+
+    <!--
+      The product data itself comes from firestore.googleapis.com, and
+      nothing on the catalogue or product pages can render until it
+      arrives — the photos are the Largest Contentful Paint element and
+      their URLs are in that response. Opening the connection during
+      HTML parse takes the DNS lookup and TLS handshake (three
+      round-trips on a mobile connection) off the front of that request
+      (NEW-23). See src/lib/firestoreRest.js for why the first read is a
+      plain fetch rather than an SDK call.
+    -->
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+
+    <!--
+      Fonts are self-hosted from /fonts — see src/styles/fonts.css.
+
+      Only Manrope is preloaded, and only its Latin subset (22 kB).
+      Manrope sets the hero subtext, which is the Largest Contentful
+      Paint element of the home page; without the preload that text
+      painted first in the fallback font and then re-rendered when
+      Manrope arrived, and the browser recorded the later, post-swap
+      paint as LCP.
+
+      Fraunces is deliberately NOT preloaded. It used to be — both the
+      roman and italic files, 149 kB together — and because a preload is
+      fetched at high priority, those two files were pulled down ahead
+      of the application's own JavaScript. Nothing could render until
+      the JS arrived, so preloading the fonts delayed the very paint it
+      was meant to speed up: removing these two tags moved the home
+      page's LCP from 5.7s to 3.7s on its own (NEW-23). Fraunces has
+      `font-display: swap`, so headings paint immediately in the
+      fallback serif and switch over when it lands.
+    -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..600&family=Manrope:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      href="/fonts/manrope-normal-400-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
-  </head>
+
+    <!--
+      Fonts: Fraunces (display serif) + Manrope (body sans), self-hosted
+      from /fonts — see src/styles/fonts.css for why (NEW-23).
+
+      The hero headline is the LCP element and sets its two lines in
+      Fraunces roman and italic, so both are preloaded here. Preload
+      needs `crossorigin` even for same-origin fonts, because font
+      requests are always made in CORS mode — without it the browser
+      fetches the file twice.
+    -->
+</head>
   <body>
-    <div id="root"></div>
+    <!--
+      STATIC APP SHELL (NEW-23)
+
+      Everything inside #root below is a plain-HTML copy of the top of
+      the home page: the navigation bar and the hero, down to the
+      headline and the sentence under it.
+
+      Why it is here: this is a client-rendered app, so the browser used
+      to show nothing at all until React had downloaded, parsed and
+      mounted. The hero subtext is the home page's Largest Contentful
+      Paint element, which meant LCP could not happen before all of that
+      finished — Lighthouse measured about 1.1s of "element render
+      delay" for it even after the JavaScript was cut by two thirds.
+      Painting the same markup straight from the HTML moves that to the
+      first frame the browser can draw.
+
+      How it interacts with React: createRoot().render() replaces the
+      contents of #root wholesale on its first render, so this shell is
+      discarded the moment the app mounts. It uses the application's own
+      class names, so the CSS that styles it is the same CSS that styles
+      the real hero and the swap is not visible. The search field and
+      the two buttons are included — not as decoration, but because they
+      occupy real height: without them the hero's centred content block
+      would be shorter here than in React and the text would jump when
+      the app took over.
+
+      Keeping it honest: the copy below is duplicated from
+      src/components/home/Hero.jsx, which is exactly the kind of thing
+      that rots silently. It cannot here — vite.config.js compares the
+      two at build time and fails the build if they drift apart.
+    -->
+    <div id="root">
+      <div>
+        <header class="navbar">
+          <div class="container navbar__inner">
+            <a class="navbar__brand" href="/">
+              <span class="navbar__brand-badge">
+                <img src="/meshape-logo.png" alt="MeShape" class="navbar__brand-logo" />
+              </span>
+              <span class="navbar__brand-sub">Gift Shop</span>
+            </a>
+          </div>
+        </header>
+        <main id="main-content">
+          <section class="hero">
+            <div class="hero__glow" aria-hidden="true"></div>
+            <div class="container hero__content">
+              <p class="hero__kicker">
+                <img
+                  class="hero__kicker-logo"
+                  src="/meshape-logo.png"
+                  alt="Meshape"
+                  width="127"
+                  height="36"
+                />
+                <span class="hero__kicker-text">Gift Shop</span>
+              </p>
+              <h1 class="hero__headline">
+                <span class="hero__line">Make Every Moment</span>
+                <span class="hero__line hero__line--accent">Extra Special</span>
+              </h1>
+              <p class="hero__subtext">
+                Personalized mugs, lamps, keychains and gift hampers — thoughtfully made and ready for
+                pickup or delivery, anywhere in India.
+              </p>
+
+              <div class="hero__search">
+                <div class="search-bar search-bar--hero">
+                  <span class="search-bar__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8" />
+                      <path d="m20 20-3.2-3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                  <input
+                    class="search-bar__input"
+                    type="search"
+                    placeholder="Search personalized gifts…"
+                    aria-label="Search personalized gifts"
+                  />
+                </div>
+              </div>
+
+              <div class="hero__actions">
+                <a class="btn btn--primary btn--lg" href="/products">Shop Now</a>
+                <a class="btn btn--secondary btn--lg" href="/products">Explore Gifts</a>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

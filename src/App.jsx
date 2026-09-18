@@ -6,8 +6,8 @@ import { CartProvider } from './context/CartContext';
 import { ProductsProvider } from './context/ProductsContext';
 import { ShopGalleryProvider } from './context/ShopGalleryContext';
 import { OffersProvider } from './context/OffersContext';
-import { AdminAuthProvider } from './context/AdminAuthContext';
 import router from './router';
+
 
 export default function App() {
   return (
@@ -17,10 +17,11 @@ export default function App() {
           <ShopGalleryProvider>
             <WishlistProvider>
               <CartProvider>
-                <AdminAuthProvider>
-                  <Loader />
-                  <RouterProvider router={router} />
-                </AdminAuthProvider>
+                {/* AdminAuthProvider deliberately lives inside the admin
+                    route tree (see components/admin/AdminRoot.jsx), so
+                    customers never bootstrap Firebase Auth (NEW-23). */}
+                <Loader />
+                <RouterProvider router={router} />
               </CartProvider>
             </WishlistProvider>
           </ShopGalleryProvider>

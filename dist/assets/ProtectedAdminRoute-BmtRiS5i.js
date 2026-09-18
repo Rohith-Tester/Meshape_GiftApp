@@ -1,1 +1,0 @@
-import{u as a,j as i,N as s,R as r}from"./index-BRUFs5WL.js";function u({children:e}){const{isAdmin:t,initializing:n}=a();return n?i.jsx("div",{className:"protected-admin-route__loading",role:"status","aria-live":"polite",children:"Checking admin session…"}):t?e:i.jsx(s,{to:r.adminLogin,replace:!0})}export{u as default};

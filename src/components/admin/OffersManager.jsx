@@ -46,7 +46,7 @@ export default function OffersManager() {
   }
 
   if (loading) return <p className="offers-manager__status">Loading offers…</p>;
-  if (loadError) return <p className="offers-manager__status offers-manager__status--error">Couldn't load offers: {loadError}</p>;
+  if (loadError) return <p className="offers-manager__status offers-manager__status--error">Couldn’t load offers: {loadError}</p>;
 
   return (
     <div className="offers-manager">
@@ -83,7 +83,7 @@ export default function OffersManager() {
         <ConfirmDialog
           message={
             <>
-              Delete <strong>{pendingDelete.name}</strong>? This can't be undone.
+              Delete <strong>{pendingDelete.name}</strong>? This can’t be undone.
             </>
           }
           onConfirm={confirmDelete}

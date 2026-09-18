@@ -18,7 +18,10 @@ export default function ShopGallery({ photos }) {
             key={cat}
             type="button"
             role="tab"
+            id={`gallery-tab-${cat.replace(/\s+/g, '-').toLowerCase()}`}
             aria-selected={activeCategory === cat}
+            aria-controls="gallery-panel"
+            tabIndex={activeCategory === cat ? 0 : -1}
             className={`shop-gallery__filter ${activeCategory === cat ? 'shop-gallery__filter--active' : ''}`}
             onClick={() => setActiveCategory(cat)}
           >
@@ -27,7 +30,15 @@ export default function ShopGallery({ photos }) {
         ))}
       </div>
 
-      <div className="shop-gallery__grid">
+      {/* Fix (NEW-16): role="tablist"/"tab" were declared with no
+          tabpanel and no aria-controls, so the relationship the roles
+          promised did not exist for assistive technology. */}
+      <div
+        className="shop-gallery__grid"
+        id="gallery-panel"
+        role="tabpanel"
+        aria-label={`${activeCategory} photos`}
+      >
         {filtered.map((photo, i) => (
           <button
             type="button"

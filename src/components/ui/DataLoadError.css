@@ -6,3 +6,21 @@
   font-size: var(--fs-200);
   margin-bottom: var(--space-5);
 }
+
+/* Retry affordance (BUG-17). */
+.data-load-error__retry {
+  margin-left: 0.6rem;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.25rem 0.8rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.data-load-error__retry:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

@@ -175,3 +175,15 @@
   border-color: var(--color-plum-950);
   color: var(--color-ivory-50);
 }
+
+/* NEW-12: the media area is now a plain container with the image link
+   inside it, so the wishlist button is a sibling rather than a button
+   nested inside an anchor. The link fills the container so the whole
+   photo stays clickable. */
+.product-card__media-link {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: inherit;
+  overflow: hidden;
+}

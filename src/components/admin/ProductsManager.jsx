@@ -48,7 +48,7 @@ export default function ProductsManager() {
   }
 
   if (loading) return <p className="products-manager__status">Loading products…</p>;
-  if (loadError) return <p className="products-manager__status products-manager__status--error">Couldn't load products: {loadError}</p>;
+  if (loadError) return <p className="products-manager__status products-manager__status--error">Couldn’t load products: {loadError}</p>;
 
   return (
     <div className="products-manager">
@@ -67,6 +67,9 @@ export default function ProductsManager() {
         <ProductForm
           product={formMode === 'add' ? null : formMode}
           categories={categories}
+          // Live copy from the onSnapshot listener, so the form can spot
+          // another admin saving underneath it (NEW-21).
+          liveProduct={formMode === 'add' ? null : products.find((p) => p.id === formMode.id)}
           onSubmit={handleSubmit}
           onCancel={() => setFormMode(null)}
           saving={saving}
@@ -79,7 +82,7 @@ export default function ProductsManager() {
         <ConfirmDialog
           message={
             <>
-              Delete <strong>{pendingDelete.name}</strong>? This can't be undone.
+              Delete <strong>{pendingDelete.name}</strong>? This can’t be undone.
             </>
           }
           onConfirm={confirmDelete}

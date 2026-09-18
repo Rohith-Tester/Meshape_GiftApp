@@ -176,10 +176,31 @@
   }
 }
 
+/*
+ * Fix (NEW-25): this reserved 50vh while the catalogue loaded, which put
+ * the footer INSIDE the first viewport. The loaded product page is far
+ * taller than that, so the moment the product rendered the footer was
+ * shoved down and out — a 0.23 layout shift, and the single largest
+ * contributor to the page's Cumulative Layout Shift. Measured at 605ms
+ * with the footer named as the shifting element.
+ *
+ * Reserving a full viewport keeps the footer below the fold until the
+ * real content arrives, so the shift happens off-screen and scores 0.
+ */
 .product-detail__loading {
-  min-height: 50vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text-muted);
+}
+
+/* Unavailable product state (NEW-03). */
+.product-detail__unavailable {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4);
+  border: 1px dashed var(--color-plum-300, #c9a6bd);
+  border-radius: var(--radius-md);
+  background: var(--color-blush-50, #fdf2f6);
+  font-size: 0.95rem;
 }
