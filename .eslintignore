@@ -1,0 +1,7 @@
+# Security audit 2026-09-18: `npm run lint` runs `eslint .`, which had no
+# ignore file and so linted the minified production bundle in dist/ —
+# 372 errors from generated code, drowning out anything real in src/.
+# A lint command nobody can read is a lint command nobody runs.
+dist/
+node_modules/
+.firebase/

@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.vite/
+
+# Environment files — these hold project configuration and must never be
+# committed. .env.example is the tracked template; copy it to .env.local
+# and fill in real values there.
+.env
+.env.*
+!.env.example
+
+# Firebase local state
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*-debug.log
+
+# Service account keys — never commit these under any circumstances.
+**/service-account-key.json
+**/serviceAccountKey.json
+*.pem
+
+# Python bytecode — admin-scripts/subset-fonts.py leaves this behind.
+__pycache__/
+*.py[cod]
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/
+*.swp
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
