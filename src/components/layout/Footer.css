@@ -1,6 +1,16 @@
 .footer {
-  /* Always below the fold on first paint — same reasoning as `.section`
-     in styles/global.css (NEW-23). */
+  /*
+    Skips style, layout and paint while off screen, which the footer
+    always is on first paint (NEW-23).
+
+    Safe here, and only because of what is inside: the footer contains
+    links and text and nothing positioned `fixed`. That matters because
+    `content-visibility: auto` implies `contain: paint`, which makes
+    this element the containing block for any fixed descendant — the
+    same property broke the product page's mobile action bar when it was
+    applied to `.section` generally. See the note in styles/global.css
+    before adding this anywhere else.
+  */
   content-visibility: auto;
   contain-intrinsic-size: auto 520px;
 }

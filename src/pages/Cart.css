@@ -62,32 +62,42 @@
    and summary card first — same reasoning as the other sticky action
    bars on the product and checkout pages. */
 @media (max-width: 899px) {
-  .cart-summary__checkout {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: var(--z-floating);
-    margin-top: 0;
-    width: auto;
-    border-radius: 0;
-    padding: 0.9rem var(--space-4);
-    padding-bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -4px 16px rgba(36, 18, 32, 0.12);
-  }
+  /* Keep Proceed to Order immediately accessible. */
+.cart-summary__checkout {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-floating);
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  padding: 0.9rem var(--space-4);
+  padding-bottom: calc(
+    0.9rem + env(safe-area-inset-bottom, 0px)
+  );
+  box-shadow: 0 -4px 16px rgba(36, 18, 32, 0.12);
+}
 
-  /* Reserves space at the bottom of the page equal to the fixed
-     button's height, so the summary card's own content (and anything
-     after it) never ends up hidden underneath it. */
-  .cart-page__grid {
-    padding-bottom: 84px;
-  }
+/* Reserve space for the fixed button. */
+.cart-page__grid {
+  padding-bottom: 100px;
 }
 
 @media (min-width: 900px) {
-  .cart-page__grid {
-    grid-template-columns: 2fr 1fr;
+  .cart-summary__checkout {
+    left: 50%;
+    right: auto;
+    width: min(520px, calc(100% - 40px));
+    transform: translateX(-50%);
+    border-radius: var(--radius-pill);
+    bottom: var(--space-4);
   }
+
+  .cart-page__grid {
+    padding-bottom: 110px;
+  }
+}
 }
 
 /* Catalogue-change notice (BUG-04 / NEW-02 / NEW-03). */

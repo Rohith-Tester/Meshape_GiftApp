@@ -2,25 +2,37 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-modal);
+
   background: rgba(36, 18, 32, 0.55);
   backdrop-filter: blur(2px);
+
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4);
+
+  padding: 16px;
+
+  overflow: hidden;
+
   animation: fade-in var(--duration-fast) var(--ease-standard);
 }
 
 .customization-modal {
   position: relative;
+
+  width: min(480px, 100%);
+  max-height: calc(100dvh - 32px);
+
   background: var(--color-surface);
   border-radius: var(--radius-lg);
+
   padding: var(--space-6);
-  width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
+
+  overflow-x: hidden;
   overflow-y: auto;
+
   box-shadow: var(--shadow-lg);
+
   animation: rise-in var(--duration-base) var(--ease-out-soft);
 }
 
@@ -68,14 +80,21 @@
 
 .customization-modal__field input[type='text'],
 .customization-modal__field textarea {
+  width: 100%;
+  max-width: 100%;
   font-family: inherit;
   font-size: var(--fs-200);
-  padding: 0.6rem 0.8rem;
+  padding: 0.7rem 0.8rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   background: var(--color-bg);
   color: var(--color-text);
+  box-sizing: border-box;
+  max-height: 220 px;
+  min-height: 110 px;
+  resize: vertical;
 }
+
 
 .customization-modal__field textarea {
   resize: vertical;
@@ -86,6 +105,9 @@
   justify-content: flex-end;
   gap: var(--space-3);
   margin-top: var(--space-2);
+  flex-wrap: wrap;
+  min-height: 44 px;
+  white-space: nowrap;
 }
 
 .customization-modal__cancel {
@@ -114,4 +136,23 @@
 .customization-modal__confirm:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+@media (max-width: 480px) {
+  .customization-modal__overlay {
+    padding: 10px;
+  }
+
+  .customization-modal {
+    max-height: calc(100dvh - 20px);
+    padding: var(--space-5);
+    border-radius: var(--radius-md);
+  }
+
+  .customization-modal__actions {
+    flex-direction: column-reverse;
+  }
+
+  .customization-modal__actions button {
+    width: 100%;
+  }
 }

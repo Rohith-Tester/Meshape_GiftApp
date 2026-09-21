@@ -86,30 +86,31 @@ ol {
 
 .section {
   padding-block: var(--space-7) var(--space-9);
-  /*
-    Skip rendering work for sections that are off screen (NEW-23).
-
-    Home mounts eight sections in one synchronous React render — two
-    product showcases, offers, why-choose-us, the shop preview and the
-    call to action — and the browser was doing full style, layout and
-    paint for every one of them before it could show the hero. Only the
-    hero is in the viewport on a phone, so the rest was work the person
-    could not see, done before the work they were waiting for. It was
-    most of the ~2.7s "element render delay" Lighthouse attributed to
-    this page's Largest Contentful Paint.
-
-    `auto` only skips content that is actually off screen; a section
-    scrolled into view renders exactly as before, and a section already
-    in the viewport (the product grid on the catalogue page, say) is
-    never skipped. `contain-intrinsic-size: auto` makes the browser
-    remember each section's real height once it has been rendered once,
-    so the scrollbar and anchor links stay correct rather than jumping —
-    the placeholder height is only used before a section has ever been
-    measured.
-  */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 600px;
 }
+
+/*
+  NOTE (NEW-23): `content-visibility: auto` was briefly set on `.section`
+  here, to skip rendering work for sections below the fold. It is gone,
+  and should not come back on a selector this broad.
+
+  `content-visibility: auto` implies `contain: paint`, and a
+  paint-containing element becomes the containing block for any
+  `position: fixed` inside it. Nearly every page wraps its content in a
+  `.section`, and several of them contain fixed-position UI: the mobile
+  "Add to Cart / Order Now" bar on a product page, the equivalent bars
+  on Cart and Order, the customization modal, and the shop gallery's
+  lightbox. All of them stopped being positioned against the viewport.
+  The product page's bar rendered roughly 1400px down the page, off
+  screen — on a phone, the primary way to buy anything silently
+  disappeared. Nothing threw, and the desktop layout looked perfect.
+
+  The work this was meant to save is done instead by
+  hooks/useDeferredRender.js, which keeps below-the-fold sections out of
+  React's first render and has no effect on positioning. If
+  `content-visibility` is ever worth revisiting, apply it to a specific
+  block after checking for `position: fixed` inside it — and check on a
+  phone-width viewport, because that is the only place this showed up.
+*/
 
 @media (min-width: 768px) {
   .container {
@@ -129,20 +130,38 @@ ol {
   border: 0;
 }
 
+/*
+  The skip link hides itself above the viewport and drops in when it
+  takes focus.
+
+  It used to do that by sitting at a fixed `top: -48px`, which assumed
+  the link is at most 48px tall. It is not: at the mobile width its text
+  and padding come to 50px, so two pixels of a dark rounded bar sat
+  across the top of every page on a phone — visible on the home page
+  above the navigation bar, and easy to mistake for a rendering fault.
+
+  Parking it with a percentage transform instead removes the assumption:
+  `-100%` is the element's own height, whatever that turns out to be at
+  whatever font size or breakpoint, and the extra offset clears the
+  `top` it will occupy once focused. Animating `transform` rather than
+  `top` is also cheaper — it is a compositor property, so the browser
+  does not re-run layout for the slide.
+*/
 .skip-link {
   position: absolute;
   left: var(--space-4);
-  top: -48px;
+  top: var(--space-4);
+  transform: translateY(calc(-100% - var(--space-4) - 4px));
   background: var(--color-plum-800);
   color: var(--color-text-on-dark);
   padding: var(--space-3) var(--space-5);
   border-radius: var(--radius-sm);
   z-index: var(--z-modal);
-  transition: top var(--duration-base) var(--ease-standard);
+  transition: transform var(--duration-base) var(--ease-standard);
 }
 
 .skip-link:focus {
-  top: var(--space-4);
+  transform: translateY(0);
 }
 
 /* Unknown-category notice on the catalogue page (NEW-06). */
